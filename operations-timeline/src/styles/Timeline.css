@@ -46,9 +46,54 @@
   background-color: white;
 }
 
+.timeline-grid {
+  flex: 1;
+  min-height: 0; /* Important for nested flex containers */
+}
+
+.timeline-grid .react-calendar-timeline {
+  height: 100%;
+}
+
+.timeline-grid .rct-outer {
+  height: 100% !important;
+}
+
+.timeline-grid .rct-scroll {
+  height: 100% !important;
+}
+
+/* Override the fixed height of the sidebar */
 .timeline-grid .rct-sidebar {
   background-color: #f8f8f8;
   border-right: 1px solid #e0e0e0;
+  font-size: 14px;
+  height: auto !important;
+  min-height: 100% !important;
+}
+
+/* Ensure the sidebar inner container also takes full height */
+.timeline-grid .rct-sidebar > div {
+  height: auto !important;
+  min-height: 100% !important;
+}
+
+.timeline-grid .rct-sidebar .rct-sidebar-row {
+  min-height: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  padding: 0;
+}
+
+/* Ensure scrolling works properly */
+.timeline-grid .rct-outer {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.timeline-grid .rct-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .timeline-grid .rct-scroll {

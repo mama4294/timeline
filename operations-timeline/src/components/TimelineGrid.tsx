@@ -12,6 +12,9 @@ import moment from "moment";
 import { useViewport } from "../hooks/useViewport";
 import TimelineControls from "./TimelineControls";
 import { dataProvider } from "../services/dataProvider";
+import { Button } from "@fluentui/react-components";
+import { EquipmentDialog } from "./EquipmentDialog";
+import type { Equipment } from "../models/types";
 // types are available in models if needed
 
 export default function TimelineGrid() {
@@ -26,13 +29,19 @@ export default function TimelineGrid() {
   } = useViewport("day");
   const [groups, setGroups] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<
+    Equipment | undefined
+  >();
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const eq = await dataProvider.getEquipment();
-      const ops = await dataProvider.getOperations(startDate, endDate);
-      const batches = await dataProvider.getBatches();
+      const [eq, ops, batches] = await Promise.all([
+        dataProvider.getEquipment(),
+        dataProvider.getOperations(startDate, endDate),
+        dataProvider.getBatches(),
+      ]);
       console.log("Batches:", batches);
       const batchColorById: Record<string, string> = {};
       batches.forEach((b) => {
@@ -44,7 +53,7 @@ export default function TimelineGrid() {
         eq.map((g) => ({
           id: g.id,
           title: g.description,
-          rightTitle: g.tag, // Add tag as right title for reference
+          rightTitle: g.tag,
         }))
       );
 
@@ -145,13 +154,65 @@ export default function TimelineGrid() {
     window.addEventListener("keydown", handleDelete);
   };
 
+  const handleEditEquipment = async (groupId: string) => {
+    console.log("Group ID clicked:", groupId);
+    const allEquipment = await dataProvider.getEquipment();
+    console.log("All equipment:", allEquipment);
+    const equipment = allEquipment.find((eq) => eq.id === groupId);
+    console.log("Found equipment:", equipment);
+    if (equipment) {
+      setSelectedEquipment(equipment);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const handleNewEquipment = () => {
+    setSelectedEquipment(undefined);
+    setIsDialogOpen(true);
+  };
+
+  const refreshEquipment = async () => {
+    const eq = await dataProvider.getEquipment();
+    setGroups(
+      eq.map((g) => ({
+        id: g.id,
+        title: g.description,
+        rightTitle: g.tag,
+      }))
+    );
+  };
+
+  const handleSaveEquipment = async (equipment: Partial<Equipment>) => {
+    try {
+      await dataProvider.saveEquipment(equipment);
+      await refreshEquipment();
+    } catch (error) {
+      console.error("Failed to save equipment:", error);
+      // TODO: Show error message to user
+    }
+  };
+
+  const handleDeleteEquipment = async () => {
+    if (selectedEquipment) {
+      try {
+        await dataProvider.deleteEquipment(selectedEquipment.id);
+        await refreshEquipment();
+      } catch (error) {
+        console.error("Failed to delete equipment:", error);
+        // TODO: Show error message to user
+      }
+    }
+  };
+
   return (
     <div
       style={{
-        backgroundColor: "#f5f5f5", // Fluid UI light background
+        backgroundColor: "#f5f5f5",
         flex: 1,
         display: "flex",
         flexDirection: "column",
+        minHeight: "0", // Important for nested flex containers
+        overflow: "hidden", // Prevent double scrollbars
       }}
     >
       <div
@@ -159,17 +220,38 @@ export default function TimelineGrid() {
           backgroundColor: "white",
           borderRadius: "4px",
           boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-          padding: "16px",
+          padding: "12px",
           display: "flex",
           flexDirection: "column",
-          gap: "16px",
+          gap: "12px",
           flex: 1,
+          minHeight: "0", // Important for nested flex containers
+          overflow: "hidden", // Contains the timeline's scroll
         }}
       >
-        <TimelineControls
-          zoom={zoom}
-          setZoom={setZoom}
-          onJumpToNow={jumpToNow}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <TimelineControls
+            zoom={zoom}
+            setZoom={setZoom}
+            onJumpToNow={jumpToNow}
+          />
+          <Button appearance="primary" onClick={handleNewEquipment}>
+            Add Equipment
+          </Button>
+        </div>
+
+        <EquipmentDialog
+          equipment={selectedEquipment}
+          open={isDialogOpen}
+          onOpenChange={(_, data) => setIsDialogOpen(data.open)}
+          onSave={handleSaveEquipment}
+          onDelete={selectedEquipment ? handleDeleteEquipment : undefined}
         />
         <Timeline
           groups={groups}
@@ -192,6 +274,41 @@ export default function TimelineGrid() {
           }}
           sidebarWidth={180}
           rightSidebarWidth={0}
+          groupRenderer={({ group }) => (
+            <div
+              style={{
+                cursor: "pointer",
+                padding: "2px 8px",
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+                justifyContent: "center",
+                minHeight: "32px",
+                gap: "0px", // Minimal gap between elements
+              }}
+              onClick={() => handleEditEquipment(group.id)}
+            >
+              <div
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "0.9em",
+                  lineHeight: "1",
+                  marginBottom: "1px", // Tiny margin between text lines
+                }}
+              >
+                {group.title}
+              </div>
+              <div
+                style={{
+                  fontSize: "0.75em",
+                  color: "#666",
+                  lineHeight: "1",
+                }}
+              >
+                {group.rightTitle}
+              </div>
+            </div>
+          )}
         >
           <TimelineHeaders>
             <SidebarHeader>

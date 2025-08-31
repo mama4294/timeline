@@ -4,6 +4,8 @@ export interface IDataProvider {
   getEquipment(): Promise<Equipment[]>;
   getOperations(startDate: Date, endDate: Date): Promise<Operation[]>;
   getBatches(): Promise<Batch[]>;
+  saveEquipment(equipment: Partial<Equipment>): Promise<Equipment>;
+  deleteEquipment(id: string): Promise<void>;
 }
 
 class MockDataProvider implements IDataProvider {
@@ -267,6 +269,40 @@ class MockDataProvider implements IDataProvider {
 
   async getBatches(): Promise<Batch[]> {
     return Promise.resolve([...this.batches]);
+  }
+
+  async saveEquipment(equipment: Partial<Equipment>): Promise<Equipment> {
+    if (equipment.id) {
+      // Update existing equipment
+      const index = this.equipment.findIndex((eq) => eq.id === equipment.id);
+      if (index === -1) throw new Error("Equipment not found");
+
+      const updated = {
+        ...this.equipment[index],
+        ...equipment,
+        modifiedOn: new Date(),
+      };
+      this.equipment[index] = updated;
+      return updated;
+    } else {
+      // Create new equipment
+      const newEquipment: Equipment = {
+        id: String(this.equipment.length + 1),
+        tag: equipment.tag || "",
+        description: equipment.description || "",
+        isActive: equipment.isActive ?? true,
+        createdOn: new Date(),
+        modifiedOn: new Date(),
+      };
+      this.equipment.push(newEquipment);
+      return newEquipment;
+    }
+  }
+
+  async deleteEquipment(id: string): Promise<void> {
+    const index = this.equipment.findIndex((eq) => eq.id === id);
+    if (index === -1) throw new Error("Equipment not found");
+    this.equipment.splice(index, 1);
   }
 }
 
