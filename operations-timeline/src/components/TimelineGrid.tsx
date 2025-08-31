@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import Timeline from "react-calendar-timeline";
+import Timeline, {
+  TimelineMarkers,
+  TodayMarker,
+  TimelineHeaders,
+  SidebarHeader,
+  DateHeader,
+} from "react-calendar-timeline";
 import "react-calendar-timeline/style.css";
+import "../styles/Timeline.css";
 import moment from "moment";
 import { useViewport } from "../hooks/useViewport";
 import TimelineControls from "./TimelineControls";
@@ -29,20 +36,24 @@ export default function TimelineGrid() {
       console.log("Batches:", batches);
       const batchColorById: Record<string, string> = {};
       batches.forEach((b) => {
-        console.log("Setting color for batch", b.id, "to", b.color);
         batchColorById[b.id] = b.color;
       });
-      console.log("Final color map:", batchColorById);
       if (!mounted) return;
 
-      setGroups(eq.map((g) => ({ id: g.id, title: g.tag })));
+      setGroups(
+        eq.map((g) => ({
+          id: g.id,
+          title: g.description,
+          rightTitle: g.tag, // Add tag as right title for reference
+        }))
+      );
 
       console.log("Operations:", ops);
       setItems(
         ops.map((o) => ({
           id: o.id,
           group: o.equipmentId,
-          title: o.batchId || o.type,
+          title: o.description,
           start_time: moment(o.startTime).valueOf(),
           end_time: moment(o.endTime).valueOf(),
           itemProps: {
@@ -135,23 +146,95 @@ export default function TimelineGrid() {
   };
 
   return (
-    <div>
-      <TimelineControls zoom={zoom} setZoom={setZoom} onJumpToNow={jumpToNow} />
-      <Timeline
-        groups={groups}
-        items={items}
-        visibleTimeStart={visibleTimeStart}
-        visibleTimeEnd={visibleTimeEnd}
-        onTimeChange={handleTimeChange}
-        canMove={true}
-        canResize="both"
-        canChangeGroup={true}
-        onItemMove={handleItemMove}
-        onItemResize={handleItemResize}
-        onItemSelect={handleItemSelect}
-        stackItems={true}
-        dragSnap={30 * 60 * 1000} // Snap to 15 minute intervals
-      />
+    <div
+      style={{
+        backgroundColor: "#f5f5f5", // Fluid UI light background
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "white",
+          borderRadius: "4px",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+          padding: "16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          flex: 1,
+        }}
+      >
+        <TimelineControls
+          zoom={zoom}
+          setZoom={setZoom}
+          onJumpToNow={jumpToNow}
+        />
+        <Timeline
+          groups={groups}
+          items={items}
+          visibleTimeStart={visibleTimeStart}
+          visibleTimeEnd={visibleTimeEnd}
+          onTimeChange={handleTimeChange}
+          canMove={true}
+          canResize="both"
+          canChangeGroup={true}
+          onItemMove={handleItemMove}
+          onItemResize={handleItemResize}
+          onItemSelect={handleItemSelect}
+          stackItems={true}
+          dragSnap={30 * 60 * 1000}
+          className="timeline-grid"
+          style={{
+            backgroundColor: "white",
+            borderRadius: "2px",
+          }}
+          sidebarWidth={180}
+          rightSidebarWidth={0}
+        >
+          <TimelineHeaders>
+            <SidebarHeader>
+              {({ getRootProps }) => {
+                return (
+                  <div
+                    {...getRootProps()}
+                    style={{
+                      backgroundColor: "#f8f8f8",
+                      padding: "8px 10px",
+                      fontWeight: "bold",
+                      borderBottom: "1px solid #e0e0e0",
+                      color: "#323130",
+                      width: "180px",
+                      boxSizing: "border-box",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    Equipment
+                  </div>
+                );
+              }}
+            </SidebarHeader>
+            <DateHeader unit="primaryHeader" />
+            <DateHeader />
+          </TimelineHeaders>
+          <TimelineMarkers>
+            <TodayMarker>
+              {({ styles }) => (
+                <div
+                  style={{
+                    ...styles,
+                    backgroundColor: "#e4002b", // Fluid UI red
+                    width: "2px",
+                  }}
+                />
+              )}
+            </TodayMarker>
+          </TimelineMarkers>
+        </Timeline>
+      </div>
     </div>
   );
 }

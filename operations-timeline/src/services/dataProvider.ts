@@ -121,6 +121,7 @@ class MockDataProvider implements IDataProvider {
     id: string,
     equipmentId: string,
     batchId: string,
+    description: string,
     startTime: Date,
     endTime: Date
   ): Operation {
@@ -131,7 +132,7 @@ class MockDataProvider implements IDataProvider {
       startTime,
       endTime,
       type: "Production",
-      description: batchId,
+      description,
       createdOn: new Date(),
       modifiedOn: new Date(),
     };
@@ -141,54 +142,63 @@ class MockDataProvider implements IDataProvider {
     {
       id: "1",
       equipmentId: "1", //3A
+      description: "Fermentation",
       startTime: new Date(2025, 7, 28, 0, 0), // Aug 28, 2025
       endTime: new Date(2025, 8, 2, 12, 0), // Sept 1, 2025
     },
     {
       id: "2",
       equipmentId: "7", //Centrifuge
+      description: "Centrifugation",
       startTime: new Date(2025, 8, 2, 9, 0),
       endTime: new Date(2025, 8, 2, 12, 0),
     },
     {
       id: "3",
       equipmentId: "3", //3C
+      description: "Lyse buffer",
       startTime: new Date(2025, 8, 2, 9, 0),
       endTime: new Date(2025, 8, 3, 0, 0),
     },
     {
       id: "4",
       equipmentId: "9", //Homogenizer
+      description: "Homogenization",
       startTime: new Date(2025, 8, 2, 14, 0),
       endTime: new Date(2025, 8, 3, 0, 0),
     },
     {
       id: "5",
       equipmentId: "6", //3F
+      description: "Lysate holding",
       startTime: new Date(2025, 8, 2, 14, 0),
       endTime: new Date(2025, 8, 5, 12, 0),
     },
     {
       id: "6",
       equipmentId: "10", //Ceramic
+      description: "Clarification",
       startTime: new Date(2025, 8, 3, 0, 0),
       endTime: new Date(2025, 8, 5, 12, 0),
     },
     {
       id: "7",
       equipmentId: "11", //Ultrafilter
+      description: "Concentration",
       startTime: new Date(2025, 8, 3, 0, 0),
       endTime: new Date(2025, 8, 5, 18, 0),
     },
     {
       id: "8",
       equipmentId: "4", //3D
+      description: "Dextrose feed",
       startTime: new Date(2025, 7, 29, 0, 0),
       endTime: new Date(2025, 8, 2, 12, 0),
     },
     {
       id: "9",
       equipmentId: "2", //3B
+      description: "Fermentation",
       startTime: new Date(2025, 7, 28, 0, 0),
       endTime: new Date(2025, 8, 2, 12, 0),
     },
@@ -201,6 +211,7 @@ class MockDataProvider implements IDataProvider {
         op.id,
         op.equipmentId,
         "25-HTS-30",
+        op.description,
         op.startTime,
         op.endTime
       )
@@ -212,6 +223,7 @@ class MockDataProvider implements IDataProvider {
         String(Number(op.id) + 10), // Add 10 to the original operation ID
         op.equipmentId,
         "25-HTS-31",
+        op.description,
         this.addWeek(op.startTime),
         this.addWeek(op.endTime)
       )
