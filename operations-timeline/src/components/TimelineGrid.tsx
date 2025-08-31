@@ -83,6 +83,57 @@ export default function TimelineGrid() {
     setEndDate(new Date(visibleTimeEnd));
   };
 
+  const handleItemMove = (
+    itemId: string | number,
+    dragTime: number,
+    newGroupOrder: number
+  ) => {
+    const item = items.find((item) => item.id === itemId);
+    if (!item) return;
+
+    const difference = dragTime - item.start_time;
+    const newItems = items.map((item) => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          start_time: dragTime,
+          end_time: item.end_time + difference,
+          group: groups[newGroupOrder].id,
+        };
+      }
+      return item;
+    });
+    setItems(newItems);
+  };
+
+  const handleItemResize = (
+    itemId: string | number,
+    time: number,
+    edge: string
+  ) => {
+    const newItems = items.map((item) => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          start_time: edge === "left" ? time : item.start_time,
+          end_time: edge === "left" ? item.end_time : time,
+        };
+      }
+      return item;
+    });
+    setItems(newItems);
+  };
+
+  const handleItemSelect = (itemId: string | number) => {
+    const handleDelete = (e: KeyboardEvent) => {
+      if (e.key === "Delete" || e.key === "Backspace") {
+        setItems(items.filter((item) => item.id !== itemId));
+        window.removeEventListener("keydown", handleDelete);
+      }
+    };
+    window.addEventListener("keydown", handleDelete);
+  };
+
   return (
     <div>
       <TimelineControls zoom={zoom} setZoom={setZoom} onJumpToNow={jumpToNow} />
@@ -92,8 +143,14 @@ export default function TimelineGrid() {
         visibleTimeStart={visibleTimeStart}
         visibleTimeEnd={visibleTimeEnd}
         onTimeChange={handleTimeChange}
-        canMove={false}
-        canResize={false}
+        canMove={true}
+        canResize="both"
+        canChangeGroup={true}
+        onItemMove={handleItemMove}
+        onItemResize={handleItemResize}
+        onItemSelect={handleItemSelect}
+        stackItems={true}
+        dragSnap={30 * 60 * 1000} // Snap to 15 minute intervals
       />
     </div>
   );
