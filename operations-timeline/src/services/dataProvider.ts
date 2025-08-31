@@ -207,9 +207,9 @@ class MockDataProvider implements IDataProvider {
     );
 
     // Second batch operations (one week later)
-    const batch2Ops = this.baseOps.map((op, index) =>
+    const batch2Ops = this.baseOps.map((op) =>
       this.createOperation(
-        String(index + 10),
+        String(Number(op.id) + 10), // Add 10 to the original operation ID
         op.equipmentId,
         "25-HTS-31",
         this.addWeek(op.startTime),
@@ -217,7 +217,18 @@ class MockDataProvider implements IDataProvider {
       )
     );
 
-    return [...batch1Ops, ...batch2Ops];
+    const allOps = [...batch1Ops, ...batch2Ops];
+    console.log(
+      "All operations:",
+      allOps.map((op) => ({
+        id: op.id,
+        batchId: op.batchId,
+        equipmentId: op.equipmentId,
+        startTime: op.startTime,
+        endTime: op.endTime,
+      }))
+    );
+    return allOps;
   })();
 
   async getEquipment(): Promise<Equipment[]> {
@@ -225,11 +236,21 @@ class MockDataProvider implements IDataProvider {
   }
 
   async getOperations(startDate: Date, endDate: Date): Promise<Operation[]> {
-    return Promise.resolve(
-      this.operations.filter(
-        (op) => op.startTime <= endDate && op.endTime >= startDate
-      )
+    console.log("Getting operations between", startDate, "and", endDate);
+    const filteredOps = this.operations.filter(
+      (op) => op.startTime <= endDate && op.endTime >= startDate
     );
+    console.log(
+      "Filtered operations:",
+      filteredOps.map((op) => ({
+        id: op.id,
+        batchId: op.batchId,
+        equipmentId: op.equipmentId,
+        startTime: op.startTime,
+        endTime: op.endTime,
+      }))
+    );
+    return Promise.resolve(filteredOps);
   }
 
   async getBatches(): Promise<Batch[]> {

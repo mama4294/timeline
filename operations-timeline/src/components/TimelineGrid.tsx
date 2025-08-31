@@ -26,12 +26,18 @@ export default function TimelineGrid() {
       const eq = await dataProvider.getEquipment();
       const ops = await dataProvider.getOperations(startDate, endDate);
       const batches = await dataProvider.getBatches();
+      console.log("Batches:", batches);
       const batchColorById: Record<string, string> = {};
-      batches.forEach((b: any) => (batchColorById[b.id] = b.color));
+      batches.forEach((b) => {
+        console.log("Setting color for batch", b.id, "to", b.color);
+        batchColorById[b.id] = b.color;
+      });
+      console.log("Final color map:", batchColorById);
       if (!mounted) return;
 
       setGroups(eq.map((g) => ({ id: g.id, title: g.tag })));
 
+      console.log("Operations:", ops);
       setItems(
         ops.map((o) => ({
           id: o.id,
@@ -39,11 +45,24 @@ export default function TimelineGrid() {
           title: o.batchId || o.type,
           start_time: moment(o.startTime).valueOf(),
           end_time: moment(o.endTime).valueOf(),
-          style: {
-            background: o.batchId
-              ? batchColorById[o.batchId] || "#999"
-              : "#ccc",
-            color: "#fff",
+          itemProps: {
+            style: (() => {
+              const bgColor = o.batchId
+                ? batchColorById[o.batchId] || "#999"
+                : "#ccc";
+              console.log(
+                "Operation",
+                o.id,
+                "batch",
+                o.batchId,
+                "color:",
+                bgColor
+              );
+              return {
+                background: bgColor,
+                color: "#fff",
+              };
+            })(),
           },
         }))
       );
