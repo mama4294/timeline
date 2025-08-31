@@ -1,0 +1,12 @@
+{
+  "appId": "",
+  "appDisplayName": "Operations Timeline",
+  "description": null,
+  "environmentId": "290f3c82-792c-e821-87bb-5378149bf319",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "logoPath": "/Users/matthewmalone/Documents/Builds/PowerApps/timeline/operations-timeline/public/vite.svg",
+  "localAppUrl": "http://localhost:3000/",
+  "connectionReferences": {},
+  "databaseReferences": {}
+}
