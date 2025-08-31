@@ -40,3 +40,21 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Timeline styles */
+.app-container {
+  padding: 16px;
+}
+
+/* Minimal timeline styles */
+.timeline-row {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timeline-cell {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
