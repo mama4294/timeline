@@ -1,6 +1,6 @@
 export interface Equipment {
   id: string;
-  name: string;
+  tag: string; // equipment tag (formerly 'name')
   description: string;
   isActive: boolean;
   createdOn: Date;

@@ -17,17 +17,29 @@ export default function TimelineGrid() {
     (async () => {
       const eq = await dataProvider.getEquipment();
       const ops = await dataProvider.getOperations(startDate, endDate);
+      const batches = await dataProvider.getBatches();
+      const batchColorById: Record<string, string> = {};
+      batches.forEach((b: any) => (batchColorById[b.id] = b.color));
       if (!mounted) return;
 
-      setGroups(eq.map((g) => ({ id: g.id, title: g.name })));
+      setGroups(eq.map((g) => ({ id: g.id, title: g.tag })));
 
       setItems(
         ops.map((o) => ({
           id: o.id,
           group: o.equipmentId,
-          title: o.batchId ? `${o.batchId}` : o.type,
+          title: o.batchId
+            ? batches.find((b: any) => b.id === o.batchId)?.batchNumber ||
+              `${o.batchId}`
+            : o.type,
           start_time: moment(o.startTime).valueOf(),
           end_time: moment(o.endTime).valueOf(),
+          style: {
+            background: o.batchId
+              ? batchColorById[o.batchId] || "#999"
+              : "#ccc",
+            color: "#fff",
+          },
         }))
       );
     })();
