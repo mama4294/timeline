@@ -196,7 +196,7 @@ class MockDataProvider implements IDataProvider {
 
   private operations: Operation[] = (() => {
     // First batch operations
-    const batch1Ops = this.baseOps.map((op) =>
+    const batch1Ops = this.baseOps.map(op => 
       this.createOperation(
         op.id,
         op.equipmentId,
@@ -207,7 +207,7 @@ class MockDataProvider implements IDataProvider {
     );
 
     // Second batch operations (one week later)
-    const batch2Ops = this.baseOps.map((op, index) =>
+    const batch2Ops = this.baseOps.map((op, index) => 
       this.createOperation(
         String(index + 10),
         op.equipmentId,

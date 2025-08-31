@@ -8,7 +8,15 @@ import { dataProvider } from "../services/dataProvider";
 // types are available in models if needed
 
 export default function TimelineGrid() {
-  const { zoom, setZoom, startDate, endDate, jumpToNow } = useViewport("day");
+  const {
+    zoom,
+    setZoom,
+    startDate,
+    endDate,
+    setStartDate,
+    setEndDate,
+    jumpToNow,
+  } = useViewport("day");
   const [groups, setGroups] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
 
@@ -28,10 +36,7 @@ export default function TimelineGrid() {
         ops.map((o) => ({
           id: o.id,
           group: o.equipmentId,
-          title: o.batchId
-            ? batches.find((b: any) => b.id === o.batchId)?.batchNumber ||
-              `${o.batchId}`
-            : o.type,
+          title: o.batchId || o.type,
           start_time: moment(o.startTime).valueOf(),
           end_time: moment(o.endTime).valueOf(),
           style: {
@@ -48,8 +53,16 @@ export default function TimelineGrid() {
     };
   }, [startDate, endDate]);
 
-  const defaultStart = moment(startDate).add(-1, "day").valueOf();
-  const defaultEnd = moment(endDate).add(1, "day").valueOf();
+  const visibleTimeStart = moment(startDate).valueOf();
+  const visibleTimeEnd = moment(endDate).valueOf();
+
+  const handleTimeChange = (
+    visibleTimeStart: number,
+    visibleTimeEnd: number
+  ) => {
+    setStartDate(new Date(visibleTimeStart));
+    setEndDate(new Date(visibleTimeEnd));
+  };
 
   return (
     <div>
@@ -57,8 +70,9 @@ export default function TimelineGrid() {
       <Timeline
         groups={groups}
         items={items}
-        defaultTimeStart={defaultStart}
-        defaultTimeEnd={defaultEnd}
+        visibleTimeStart={visibleTimeStart}
+        visibleTimeEnd={visibleTimeEnd}
+        onTimeChange={handleTimeChange}
         canMove={false}
         canResize={false}
       />

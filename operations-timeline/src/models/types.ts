@@ -21,9 +21,7 @@ export interface Operation {
 
 export interface Batch {
   id: string;
-  batchNumber: string;
   color: string;
-  description: string;
   createdOn: Date;
   modifiedOn: Date;
 }
