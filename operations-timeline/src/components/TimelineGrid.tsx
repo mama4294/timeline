@@ -715,6 +715,9 @@ export default function TimelineGrid() {
     setContextMenu((prev) => ({ ...prev, visible: false }));
   };
 
+  // Debug logging
+  console.log("Timeline render - groups:", groups, "items:", items);
+
   return (
     <div
       style={{
@@ -759,196 +762,176 @@ export default function TimelineGrid() {
           overflow: "hidden", // Contains the timeline's scroll
         }}
       >
-        <div
-          className="timeline-grid"
-          style={{
-            height: "400px", // Explicit height for timeline
-            display: "flex",
-            flexDirection: "column",
-          }}
-          onClick={(e) => {
-            // Clear selection when clicking on empty space (not on items)
-            if (
-              e.target === e.currentTarget ||
-              (e.target as Element).closest(".rct-item") === null
-            ) {
-              if (!e.metaKey && !e.ctrlKey) {
-                setSelectedItems(new Set());
-              }
-            }
-          }}
-        >
-          <Timeline
-            groups={groups}
-            items={items}
-            visibleTimeStart={visibleTimeStart}
-            visibleTimeEnd={visibleTimeEnd}
-            onTimeChange={handleTimeChange}
-            canMove={true}
-            canResize={selectedItems.size <= 1 ? "both" : false}
-            canChangeGroup={false}
-            onItemMove={handleItemMove}
-            onItemResize={handleItemResize}
-            onItemSelect={handleItemSelect}
-            stackItems={true}
-            dragSnap={30 * 60 * 1000}
-            lineHeight={40}
-            itemRenderer={({ item, getItemProps, getResizeProps }) => {
-              const { left: leftResizeProps, right: rightResizeProps } =
-                getResizeProps();
-              const isSelected = selectedItems.has(item.id);
-              const canResize = selectedItems.size <= 1;
+        <Timeline
+          groups={groups}
+          items={items}
+          visibleTimeStart={visibleTimeStart}
+          visibleTimeEnd={visibleTimeEnd}
+          onTimeChange={handleTimeChange}
+          canMove={true}
+          canResize={selectedItems.size <= 1 ? "both" : false}
+          canChangeGroup={false}
+          onItemMove={handleItemMove}
+          onItemResize={handleItemResize}
+          onItemSelect={handleItemSelect}
+          stackItems={true}
+          dragSnap={30 * 60 * 1000}
+          lineHeight={40}
+          itemRenderer={({ item, getItemProps, getResizeProps }) => {
+            const { left: leftResizeProps, right: rightResizeProps } =
+              getResizeProps();
+            const isSelected = selectedItems.has(item.id);
+            const canResize = selectedItems.size <= 1;
 
-              const itemProps = getItemProps({
-                onClick: (e: React.MouseEvent) => {
-                  handleItemSelect(item.id, e);
-                },
-                onDoubleClick: (e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  handleEditOperation(String(item.id));
-                },
-                onContextMenu: (e: React.MouseEvent) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setContextMenu({
-                    visible: true,
-                    x: e.clientX,
-                    y: e.clientY,
-                    operationId: String(item.id),
-                  });
-                },
-                style: {
-                  ...item.itemProps?.style,
-                  cursor: canResize ? "pointer" : "move",
-                  userSelect: "none",
-                  border: isSelected ? "2px solid #0078d4" : "none",
-                  boxShadow: isSelected
-                    ? "0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15)"
-                    : item.itemProps?.style?.boxShadow ||
-                      "0 1px 2px rgba(0, 0, 0, 0.1)",
-                },
-              });
+            const itemProps = getItemProps({
+              onClick: (e: React.MouseEvent) => {
+                handleItemSelect(item.id, e);
+              },
+              onDoubleClick: (e: React.MouseEvent) => {
+                e.stopPropagation();
+                handleEditOperation(String(item.id));
+              },
+              onContextMenu: (e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setContextMenu({
+                  visible: true,
+                  x: e.clientX,
+                  y: e.clientY,
+                  operationId: String(item.id),
+                });
+              },
+              style: {
+                ...item.itemProps?.style,
+                cursor: canResize ? "pointer" : "move",
+                userSelect: "none",
+                border: isSelected ? "2px solid #0078d4" : "none",
+                boxShadow: isSelected
+                  ? "0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15)"
+                  : item.itemProps?.style?.boxShadow ||
+                    "0 1px 2px rgba(0, 0, 0, 0.1)",
+              },
+            });
 
-              return (
-                <div {...itemProps} data-selected={isSelected}>
-                  {canResize && <div {...leftResizeProps} />}
-                  <Tooltip
-                    content={`${item.description}${
-                      item.batchId ? ` (Batch: ${item.batchId})` : ""
-                    }`}
-                    relationship="description"
+            return (
+              <div {...itemProps} data-selected={isSelected}>
+                {canResize && <div {...leftResizeProps} />}
+                <Tooltip
+                  content={`${item.description}${
+                    item.batchId ? ` (Batch: ${item.batchId})` : ""
+                  }`}
+                  relationship="description"
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      position: "relative",
+                      paddingLeft: 4,
+                      paddingRight: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      overflow: "hidden",
+                    }}
                   >
                     <div
                       style={{
-                        height: "100%",
-                        position: "relative",
-                        paddingLeft: 4,
-                        paddingRight: 4,
-                        display: "flex",
-                        alignItems: "center",
+                        fontSize: "12px",
+                        color: "white",
+                        fontWeight: "500",
+                        textOverflow: "ellipsis",
                         overflow: "hidden",
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "white",
-                          fontWeight: "500",
-                          textOverflow: "ellipsis",
-                          overflow: "hidden",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {item.title}
-                      </div>
+                      {item.title}
                     </div>
-                  </Tooltip>
-                  {canResize && <div {...rightResizeProps} />}
-                </div>
-              );
-            }}
-            className="timeline-grid"
-            style={{
-              backgroundColor: "white",
-              borderRadius: "2px",
-            }}
-            sidebarWidth={180}
-            rightSidebarWidth={0}
-            groupRenderer={({ group }) => (
+                  </div>
+                </Tooltip>
+                {canResize && <div {...rightResizeProps} />}
+              </div>
+            );
+          }}
+          className="timeline-grid"
+          style={{
+            backgroundColor: "white",
+            borderRadius: "2px",
+          }}
+          sidebarWidth={180}
+          rightSidebarWidth={0}
+          groupRenderer={({ group }) => (
+            <div
+              style={{
+                cursor: "pointer",
+                padding: "4px 8px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                height: "100%",
+              }}
+              onClick={() => handleEditEquipment(group.id)}
+            >
               <div
                 style={{
-                  cursor: "pointer",
-                  padding: "4px 8px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  height: "100%",
+                  fontWeight: "bold",
+                  fontSize: "0.9em",
+                  lineHeight: "1.2",
                 }}
-                onClick={() => handleEditEquipment(group.id)}
               >
-                <div
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "0.9em",
-                    lineHeight: "1.2",
-                  }}
-                >
-                  {group.title}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.75em",
-                    color: "#666",
-                    lineHeight: "1.2",
-                  }}
-                >
-                  {group.rightTitle}
-                </div>
+                {group.title}
               </div>
-            )}
-          >
-            <TimelineHeaders>
-              <SidebarHeader>
-                {({ getRootProps }) => {
-                  return (
-                    <div
-                      {...getRootProps()}
-                      style={{
-                        backgroundColor: "#f8f8f8",
-                        padding: "8px 10px",
-                        fontWeight: "bold",
-                        borderBottom: "1px solid #e0e0e0",
-                        color: "#323130",
-                        width: "180px",
-                        boxSizing: "border-box",
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      Equipment
-                    </div>
-                  );
+              <div
+                style={{
+                  fontSize: "0.75em",
+                  color: "#666",
+                  lineHeight: "1.2",
                 }}
-              </SidebarHeader>
-              <DateHeader unit="primaryHeader" />
-              <DateHeader />
-            </TimelineHeaders>
-            <TimelineMarkers>
-              <TodayMarker>
-                {({ styles }) => (
+              >
+                {group.rightTitle}
+              </div>
+            </div>
+          )}
+        >
+          <TimelineHeaders>
+            <SidebarHeader>
+              {({ getRootProps }) => {
+                return (
                   <div
+                    {...getRootProps()}
                     style={{
-                      ...styles,
-                      backgroundColor: "#e4002b", // Fluid UI red
-                      width: "2px",
+                      backgroundColor: "#f8f8f8",
+                      padding: "8px 10px",
+                      fontWeight: "bold",
+                      borderBottom: "1px solid #e0e0e0",
+                      color: "#323130",
+                      width: "180px",
+                      boxSizing: "border-box",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
                     }}
-                  />
-                )}
-              </TodayMarker>
-            </TimelineMarkers>
-          </Timeline>
-        </div>
+                  >
+                    Equipment
+                  </div>
+                );
+              }}
+            </SidebarHeader>
+            <DateHeader unit="primaryHeader" />
+            <DateHeader />
+          </TimelineHeaders>
+          <TimelineMarkers>
+            <TodayMarker>
+              {({ styles }) => (
+                <div
+                  style={{
+                    ...styles,
+                    backgroundColor: "#e4002b", // Fluid UI red
+                    width: "2px",
+                  }}
+                />
+              )}
+            </TodayMarker>
+          </TimelineMarkers>
+        </Timeline>
       </div>
 
       {/* Context Menu */}

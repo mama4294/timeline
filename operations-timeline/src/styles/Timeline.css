@@ -1,7 +1,7 @@
+/* Basic timeline styling - minimal overrides to avoid breaking library behavior */
 .timeline-grid .rct-header-root {
   background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
-  min-height: unset;
 }
 
 .timeline-grid .rct-dateHeader {
@@ -14,18 +14,6 @@
   border-left: 1px solid #e0e0e0;
   box-sizing: border-box;
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Ensure text is centered and truncated properly */
-.timeline-grid .rct-dateHeader-primary {
-  text-align: center;
-  min-width: 80px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
 }
 
 .timeline-grid .rct-dateHeader-primary {
@@ -41,77 +29,19 @@
   height: 30px;
 }
 
-.timeline-grid .rct-calendar-header {
-  border: none;
-  background-color: white;
-}
-
-.timeline-grid {
-  flex: 1;
-  min-height: 0; /* Important for nested flex containers */
-  position: relative; /* Ensure absolute positioning works correctly */
-}
-
-.timeline-grid .react-calendar-timeline {
-  height: 100%;
-}
-
-.timeline-grid .rct-outer {
-  height: 100% !important;
-}
-
-.timeline-grid .rct-scroll {
-  height: 100% !important;
-}
-
-/* Override the fixed height of the sidebar */
 .timeline-grid .rct-sidebar {
   background-color: #f8f8f8;
   border-right: 1px solid #e0e0e0;
   font-size: 14px;
-  height: auto !important;
-  min-height: 100% !important;
 }
 
-/* Ensure the sidebar inner container also takes full height */
-.timeline-grid .rct-sidebar > div {
-  height: auto !important;
-  min-height: 100% !important;
-}
-
-.timeline-grid .rct-sidebar .rct-sidebar-row {
-  min-height: 40px !important;
-  height: 40px !important;
-  line-height: 40px !important;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-}
-
-/* Ensure scrolling works properly */
-.timeline-grid .rct-outer {
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.timeline-grid .rct-scroll {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.timeline-grid .rct-scroll {
-  background-color: white;
-}
-
-/* Ensure consistent row heights */
-.timeline-grid .rct-horizontal-lines .rct-hl-even,
-.timeline-grid .rct-horizontal-lines .rct-hl-odd {
+.timeline-grid .rct-sidebar-row {
+  min-height: 40px;
+  line-height: 40px;
+  padding: 0 8px;
   border-bottom: 1px solid #e0e0e0;
-  height: 40px !important;
 }
 
-/* Ensure timeline items are properly sized within rows */
 .timeline-grid .rct-item {
   border-radius: 2px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -119,36 +49,9 @@
   margin: 6px 0;
 }
 
-.timeline-grid .rct-vertical-lines .rct-vl {
-  border-left: 1px solid #f0f0f0;
-}
-
-.timeline-grid .rct-item.selected {
-  border: 2px solid #0078d4;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
 /* Multi-select styling */
 .timeline-grid .rct-item[data-selected="true"] {
   border: 2px solid #0078d4 !important;
   box-shadow: 0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15) !important;
   z-index: 10;
-}
-
-/* Enhanced styling for selected items during drag */
-.timeline-grid .rct-item[data-selected="true"]:hover {
-  box-shadow: 0 0 0 2px #0078d4, 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* Make sure multi-selected items stay visually connected */
-.timeline-grid .rct-item[data-selected="true"]::before {
-  content: "";
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border: 1px dashed #0078d4;
-  pointer-events: none;
-  opacity: 0.6;
 }
