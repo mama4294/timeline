@@ -14,6 +14,7 @@ import TimelineControls from "./TimelineControls";
 import { dataProvider } from "../services/dataProvider";
 import { EquipmentDialog } from "./EquipmentDialog";
 import { OperationDialog } from "./OperationDialog";
+import { ContextMenu } from "./ContextMenu";
 import type { Equipment, Operation, Batch } from "../models/types";
 // types are available in models if needed
 
@@ -40,6 +41,19 @@ export default function TimelineGrid() {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    operationId: string | null;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    operationId: null,
+  });
 
   // Helper function to create timeline items from operations
   const createTimelineItem = (operation: Operation) => {
@@ -176,13 +190,24 @@ export default function TimelineGrid() {
   };
 
   const handleItemSelect = (itemId: string | number) => {
-    // Double-click or special key to edit operation
-    handleEditOperation(String(itemId));
-    
-    // Keep the delete functionality for keyboard
-    const handleDelete = (e: KeyboardEvent) => {
+    // Just handle delete functionality for keyboard, no auto-edit
+    const handleDelete = async (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") {
-        setItems(items.filter((item) => item.id !== itemId));
+        // Find and delete the operation directly
+        const operationToDelete = operations.find(op => op.id === String(itemId));
+        if (operationToDelete) {
+          try {
+            await dataProvider.deleteOperation(operationToDelete.id);
+            
+            // Remove from operations state
+            setOperations(prev => prev.filter(op => op.id !== operationToDelete.id));
+            
+            // Remove from timeline items
+            setItems(prev => prev.filter(item => item.id !== operationToDelete.id));
+          } catch (error) {
+            console.error("Failed to delete operation:", error);
+          }
+        }
         window.removeEventListener("keydown", handleDelete);
       }
     };
@@ -320,6 +345,52 @@ export default function TimelineGrid() {
     }
   };
 
+  // Context menu handlers
+  const handleContextMenuEdit = () => {
+    if (contextMenu.operationId) {
+      handleEditOperation(contextMenu.operationId);
+      setContextMenu(prev => ({ ...prev, visible: false }));
+    }
+  };
+
+  const handleContextMenuDelete = () => {
+    if (contextMenu.operationId) {
+      // Find the operation and set it as selected, then delete
+      const operation = operations.find(op => op.id === contextMenu.operationId) ||
+        items.find(item => item.id === contextMenu.operationId);
+      
+      if (operation) {
+        if ('equipmentId' in operation) {
+          // It's already an Operation object
+          setSelectedOperation(operation);
+        } else {
+          // Convert from timeline item
+          const operationData: Operation = {
+            id: operation.id,
+            equipmentId: operation.group,
+            batchId: operation.batchId || null,
+            startTime: new Date(operation.start_time),
+            endTime: new Date(operation.end_time),
+            type: operation.type || "Production",
+            description: operation.title,
+            createdOn: new Date(),
+            modifiedOn: new Date(),
+          };
+          setSelectedOperation(operationData);
+        }
+        
+        // Call delete handler
+        handleDeleteOperation();
+      }
+      
+      setContextMenu(prev => ({ ...prev, visible: false }));
+    }
+  };
+
+  const handleContextMenuClose = () => {
+    setContextMenu(prev => ({ ...prev, visible: false }));
+  };
+
   return (
     <div
       style={{
@@ -385,6 +456,58 @@ export default function TimelineGrid() {
           onItemSelect={handleItemSelect}
           stackItems={true}
           dragSnap={30 * 60 * 1000}
+          itemRenderer={({ item, getItemProps, getResizeProps }) => {
+            const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
+            const itemProps = getItemProps({
+              onDoubleClick: () => handleEditOperation(String(item.id)),
+              onContextMenu: (e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setContextMenu({
+                  visible: true,
+                  x: e.clientX,
+                  y: e.clientY,
+                  operationId: String(item.id),
+                });
+              },
+              style: {
+                ...item.itemProps?.style,
+                cursor: 'pointer',
+                userSelect: 'none',
+              }
+            });
+
+            return (
+              <div {...itemProps}>
+                <div {...leftResizeProps} />
+                <div
+                  style={{
+                    height: '100%',
+                    position: 'relative',
+                    paddingLeft: 4,
+                    paddingRight: 4,
+                    display: 'flex',
+                    alignItems: 'center',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: 'white',
+                      fontWeight: '500',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {item.title}
+                  </div>
+                </div>
+                <div {...rightResizeProps} />
+              </div>
+            );
+          }}
           className="timeline-grid"
           style={{
             backgroundColor: "white",
@@ -467,6 +590,46 @@ export default function TimelineGrid() {
           </TimelineMarkers>
         </Timeline>
       </div>
+
+      {/* Context Menu */}
+      <ContextMenu
+        visible={contextMenu.visible}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        onEdit={handleContextMenuEdit}
+        onDelete={handleContextMenuDelete}
+        onClose={handleContextMenuClose}
+      />
+
+      {/* Equipment Dialog */}
+      <EquipmentDialog
+        equipment={selectedEquipment}
+        open={isDialogOpen}
+        onOpenChange={(_, data) => {
+          if (!data.open) {
+            setIsDialogOpen(false);
+            setSelectedEquipment(undefined);
+          }
+        }}
+        onSave={handleSaveEquipment}
+        onDelete={selectedEquipment ? handleDeleteEquipment : undefined}
+      />
+
+      {/* Operation Dialog */}
+      <OperationDialog
+        operation={selectedOperation}
+        open={isOperationDialogOpen}
+        onOpenChange={(_, data) => {
+          if (!data.open) {
+            setIsOperationDialogOpen(false);
+            setSelectedOperation(undefined);
+          }
+        }}
+        onSave={handleSaveOperation}
+        onDelete={selectedOperation ? handleDeleteOperation : undefined}
+        equipment={equipment}
+        batches={batches}
+      />
     </div>
   );
 }
