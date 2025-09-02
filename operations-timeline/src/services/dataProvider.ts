@@ -6,6 +6,8 @@ export interface IDataProvider {
   getBatches(): Promise<Batch[]>;
   saveEquipment(equipment: Partial<Equipment>): Promise<Equipment>;
   deleteEquipment(id: string): Promise<void>;
+  saveOperation(operation: Partial<Operation>): Promise<Operation>;
+  deleteOperation(id: string): Promise<void>;
 }
 
 class MockDataProvider implements IDataProvider {
@@ -303,6 +305,44 @@ class MockDataProvider implements IDataProvider {
     const index = this.equipment.findIndex((eq) => eq.id === id);
     if (index === -1) throw new Error("Equipment not found");
     this.equipment.splice(index, 1);
+  }
+
+  async saveOperation(operation: Partial<Operation>): Promise<Operation> {
+    if (operation.id) {
+      // Update existing operation
+      const index = this.operations.findIndex((op) => op.id === operation.id);
+      if (index === -1) throw new Error("Operation not found");
+
+      const updated = {
+        ...this.operations[index],
+        ...operation,
+        modifiedOn: new Date(),
+      };
+      this.operations[index] = updated;
+      return updated;
+    } else {
+      // Create new operation
+      const newId = String(Math.max(...this.operations.map(op => parseInt(op.id))) + 1);
+      const newOperation: Operation = {
+        id: newId,
+        equipmentId: operation.equipmentId || "",
+        batchId: operation.batchId || null,
+        startTime: operation.startTime || new Date(),
+        endTime: operation.endTime || new Date(),
+        type: operation.type || "Production",
+        description: operation.description || "",
+        createdOn: new Date(),
+        modifiedOn: new Date(),
+      };
+      this.operations.push(newOperation);
+      return newOperation;
+    }
+  }
+
+  async deleteOperation(id: string): Promise<void> {
+    const index = this.operations.findIndex((op) => op.id === id);
+    if (index === -1) throw new Error("Operation not found");
+    this.operations.splice(index, 1);
   }
 }
 

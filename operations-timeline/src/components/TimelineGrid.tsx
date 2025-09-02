@@ -13,7 +13,8 @@ import { useViewport } from "../hooks/useViewport";
 import TimelineControls from "./TimelineControls";
 import { dataProvider } from "../services/dataProvider";
 import { EquipmentDialog } from "./EquipmentDialog";
-import type { Equipment } from "../models/types";
+import { OperationDialog } from "./OperationDialog";
+import type { Equipment, Operation, Batch } from "../models/types";
 // types are available in models if needed
 
 export default function TimelineGrid() {
@@ -32,6 +33,33 @@ export default function TimelineGrid() {
   const [selectedEquipment, setSelectedEquipment] = useState<
     Equipment | undefined
   >();
+  
+  // Operation dialog state
+  const [isOperationDialogOpen, setIsOperationDialogOpen] = useState(false);
+  const [selectedOperation, setSelectedOperation] = useState<Operation | undefined>();
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [operations, setOperations] = useState<Operation[]>([]);
+
+  // Helper function to create timeline items from operations
+  const createTimelineItem = (operation: Operation) => {
+    const batch = batches.find(b => b.id === operation.batchId);
+    const bgColor = batch ? batch.color : "#ccc";
+    
+    return {
+      id: operation.id,
+      group: operation.equipmentId,
+      title: operation.description,
+      start_time: moment(operation.startTime).valueOf(),
+      end_time: moment(operation.endTime).valueOf(),
+      itemProps: {
+        style: {
+          background: bgColor,
+          color: "#fff",
+        },
+      },
+    };
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -47,6 +75,10 @@ export default function TimelineGrid() {
         batchColorById[b.id] = b.color;
       });
       if (!mounted) return;
+
+      setEquipment(eq);
+      setBatches(batches);
+      setOperations(ops);
 
       setGroups(
         eq.map((g) => ({
@@ -144,6 +176,10 @@ export default function TimelineGrid() {
   };
 
   const handleItemSelect = (itemId: string | number) => {
+    // Double-click or special key to edit operation
+    handleEditOperation(String(itemId));
+    
+    // Keep the delete functionality for keyboard
     const handleDelete = (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") {
         setItems(items.filter((item) => item.id !== itemId));
@@ -203,6 +239,87 @@ export default function TimelineGrid() {
     }
   };
 
+  // Operation handlers
+  const handleNewOperation = () => {
+    setSelectedOperation(undefined);
+    setIsOperationDialogOpen(true);
+  };
+
+  const handleEditOperation = (operationId: string) => {
+    // Find the operation in the operations state first, then items if needed
+    let operation = operations.find(op => op.id === operationId);
+    
+    if (!operation) {
+      // Fall back to converting from timeline item
+      const item = items.find(item => item.id === operationId);
+      if (item) {
+        operation = {
+          id: item.id,
+          equipmentId: item.group,
+          batchId: item.batchId || null,
+          startTime: new Date(item.start_time),
+          endTime: new Date(item.end_time),
+          type: item.type || "Production",
+          description: item.title,
+          createdOn: new Date(),
+          modifiedOn: new Date(),
+        };
+      }
+    }
+    
+    if (operation) {
+      setSelectedOperation(operation);
+      setIsOperationDialogOpen(true);
+    }
+  };
+
+  const handleSaveOperation = async (operation: Partial<Operation>) => {
+    try {
+      const saved = await dataProvider.saveOperation(operation);
+      
+      // Update operations state  
+      if (operation.id) {
+        setOperations(prev => prev.map(op => op.id === operation.id ? saved : op));
+        
+        // Update timeline items
+        const timelineItem = createTimelineItem(saved);
+        setItems(prev => prev.map(item => item.id === operation.id ? timelineItem : item));
+      } else {
+        setOperations(prev => [...prev, saved]);
+        
+        // Add new timeline item
+        const timelineItem = createTimelineItem(saved);
+        setItems(prev => [...prev, timelineItem]);
+      }
+      
+      setIsOperationDialogOpen(false);
+      setSelectedOperation(undefined);
+    } catch (error) {
+      console.error("Failed to save operation:", error);
+      // TODO: Show error message to user
+    }
+  };
+
+  const handleDeleteOperation = async () => {
+    if (selectedOperation) {
+      try {
+        await dataProvider.deleteOperation(selectedOperation.id);
+        
+        // Remove from operations state
+        setOperations(prev => prev.filter(op => op.id !== selectedOperation.id));
+        
+        // Remove from timeline items
+        setItems(prev => prev.filter(item => item.id !== selectedOperation.id));
+        
+        setIsOperationDialogOpen(false);
+        setSelectedOperation(undefined);
+      } catch (error) {
+        console.error("Failed to delete operation:", error);
+        // TODO: Show error message to user
+      }
+    }
+  };
+
   return (
     <div
       style={{
@@ -233,6 +350,7 @@ export default function TimelineGrid() {
           setZoom={setZoom}
           onJumpToNow={jumpToNow}
           onAddEquipment={handleNewEquipment}
+          onAddOperation={handleNewOperation}
         />
 
         <EquipmentDialog
@@ -242,6 +360,17 @@ export default function TimelineGrid() {
           onSave={handleSaveEquipment}
           onDelete={selectedEquipment ? handleDeleteEquipment : undefined}
         />
+
+        <OperationDialog
+          operation={selectedOperation}
+          open={isOperationDialogOpen}
+          onOpenChange={(_, data) => setIsOperationDialogOpen(data.open)}
+          onSave={handleSaveOperation}
+          onDelete={selectedOperation ? handleDeleteOperation : undefined}
+          equipment={equipment}
+          batches={batches}
+        />
+
         <Timeline
           groups={groups}
           items={items}

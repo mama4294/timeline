@@ -18,6 +18,7 @@ interface Props {
   setZoom: (z: ZoomLevel) => void;
   onJumpToNow: () => void;
   onAddEquipment: () => void;
+  onAddOperation: () => void;
 }
 
 const useStyles = makeStyles({
@@ -34,6 +35,7 @@ export default function TimelineControls({
   setZoom,
   onJumpToNow,
   onAddEquipment,
+  onAddOperation,
 }: Props) {
   const styles = useStyles();
 
@@ -77,6 +79,14 @@ export default function TimelineControls({
         onClick={onAddEquipment}
       >
         Add Equipment
+      </Button>
+      
+      <Button
+        appearance="outline"
+        icon={<Add24Regular />}
+        onClick={onAddOperation}
+      >
+        Add Operation
       </Button>
     </Toolbar>
   );
