@@ -551,7 +551,7 @@ export default function TimelineGrid() {
 
       if (operation) {
         let batchId: string | null = null;
-        
+
         if ("batchId" in operation) {
           // It's already an Operation object
           batchId = operation.batchId;
@@ -562,19 +562,23 @@ export default function TimelineGrid() {
 
         if (batchId) {
           // Find all operations with the same batchId
-          const operationsInBatch = operations.filter(op => op.batchId === batchId);
-          const itemsInBatch = items.filter(item => item.batchId === batchId);
-          
+          const operationsInBatch = operations.filter(
+            (op) => op.batchId === batchId
+          );
+          const itemsInBatch = items.filter((item) => item.batchId === batchId);
+
           // Combine the IDs from both sources
           const batchOperationIds = new Set([
-            ...operationsInBatch.map(op => op.id),
-            ...itemsInBatch.map(item => item.id)
+            ...operationsInBatch.map((op) => op.id),
+            ...itemsInBatch.map((item) => item.id),
           ]);
 
           // Update selected items to include all operations in the batch
           setSelectedItems(batchOperationIds);
-          
-          console.log(`Selected batch ${batchId} with ${batchOperationIds.size} operations`);
+
+          console.log(
+            `Selected batch ${batchId} with ${batchOperationIds.size} operations`
+          );
         } else {
           console.log("Operation has no batch ID");
         }

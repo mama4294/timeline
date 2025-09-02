@@ -1,5 +1,17 @@
-import React, { useEffect } from "react";
-import { Edit24Regular, Delete24Regular, SelectAllOn24Regular } from "@fluentui/react-icons";
+import React, { useRef } from "react";
+import {
+  Edit24Regular,
+  Delete24Regular,
+  SelectAllOn24Regular,
+} from "@fluentui/react-icons";
+import {
+  Menu,
+  MenuTrigger,
+  MenuPopover,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+} from "@fluentui/react-components";
 
 interface ContextMenuProps {
   visible: boolean;
@@ -20,117 +32,69 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onSelectBatch,
   onClose,
 }) => {
-  useEffect(() => {
-    const handleClickOutside = () => {
-      onClose();
-    };
+  const targetRef = useRef<HTMLDivElement>(null);
 
-    if (visible) {
-      document.addEventListener("click", handleClickOutside);
-      document.addEventListener("contextmenu", handleClickOutside);
-    }
+  const handleEdit = () => {
+    onEdit();
+    onClose();
+  };
 
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-      document.removeEventListener("contextmenu", handleClickOutside);
-    };
-  }, [visible, onClose]);
+  const handleSelectBatch = () => {
+    onSelectBatch();
+    onClose();
+  };
+
+  const handleDelete = () => {
+    onDelete();
+    onClose();
+  };
 
   if (!visible) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: y,
-        left: x,
-        zIndex: 9999,
-        background: "white",
-        border: "1px solid var(--colorNeutralStroke1)",
-        borderRadius: "4px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-        minWidth: "140px",
-        padding: "4px 0",
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
+    <>
+      {/* Hidden target element for positioning */}
       <div
+        ref={targetRef}
         style={{
-          padding: "8px 16px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "14px",
-        }}
-        onClick={onEdit}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor =
-            "var(--colorNeutralBackground1Hover)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
-      >
-        <Edit24Regular />
-        Edit Operation
-      </div>
-      <div
-        style={{
-          height: "1px",
-          backgroundColor: "var(--colorNeutralStroke2)",
-          margin: "4px 0",
+          position: "fixed",
+          top: y,
+          left: x,
+          width: 1,
+          height: 1,
+          pointerEvents: "none",
         }}
       />
-      <div
-        style={{
-          padding: "8px 16px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "14px",
-        }}
-        onClick={onSelectBatch}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor =
-            "var(--colorNeutralBackground1Hover)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
-      >
-        <SelectAllOn24Regular />
-        Select Batch
-      </div>
-      <div
-        style={{
-          height: "1px",
-          backgroundColor: "var(--colorNeutralStroke2)",
-          margin: "4px 0",
-        }}
-      />
-      <div
-        style={{
-          padding: "8px 16px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "14px",
-        }}
-        onClick={onDelete}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor =
-            "var(--colorNeutralBackground1Hover)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
-      >
-        <Delete24Regular />
-        Delete Operation
-      </div>
-    </div>
+      <Menu open={visible} onOpenChange={(_e, data) => !data.open && onClose()}>
+        <MenuTrigger>
+          <div
+            style={{
+              position: "fixed",
+              top: y,
+              left: x,
+              width: 1,
+              height: 1,
+            }}
+          />
+        </MenuTrigger>
+        <MenuPopover>
+          <MenuList>
+            <MenuItem icon={<Edit24Regular />} onClick={handleEdit}>
+              Edit Operation
+            </MenuItem>
+            <MenuItem
+              icon={<SelectAllOn24Regular />}
+              onClick={handleSelectBatch}
+            >
+              Select Batch
+            </MenuItem>
+            <MenuDivider />
+            <MenuItem icon={<Delete24Regular />} onClick={handleDelete}>
+              Delete Operation
+            </MenuItem>
+          </MenuList>
+        </MenuPopover>
+      </Menu>
+    </>
   );
 };
