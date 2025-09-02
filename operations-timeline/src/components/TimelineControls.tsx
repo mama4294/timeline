@@ -51,6 +51,7 @@ export default function TimelineControls({
     { key: "hour", text: "Hour View" },
     { key: "day", text: "Day View" },
     { key: "week", text: "Week View" },
+    { key: "month", text: "Month View" },
     { key: "year", text: "Year View" },
   ];
 
@@ -59,7 +60,7 @@ export default function TimelineControls({
     { key: "edit", text: "Edit Mode" },
   ];
 
-  const zoomOrder: ZoomLevel[] = ["hour", "day", "week", "year"];
+  const zoomOrder: ZoomLevel[] = ["hour", "day", "week", "month", "year"];
   const currentZoomIndex = zoomOrder.findIndex((z) => z === zoom);
   const canZoomIn = currentZoomIndex > 0;
   const canZoomOut = currentZoomIndex < zoomOrder.length - 1;
