@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Edit24Regular, Delete24Regular } from "@fluentui/react-icons";
+import { Edit24Regular, Delete24Regular, SelectAllOn24Regular } from "@fluentui/react-icons";
 
 interface ContextMenuProps {
   visible: boolean;
@@ -7,6 +7,7 @@ interface ContextMenuProps {
   y: number;
   onEdit: () => void;
   onDelete: () => void;
+  onSelectBatch: () => void;
   onClose: () => void;
 }
 
@@ -16,6 +17,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   y,
   onEdit,
   onDelete,
+  onSelectBatch,
   onClose,
 }) => {
   useEffect(() => {
@@ -72,6 +74,34 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       >
         <Edit24Regular />
         Edit Operation
+      </div>
+      <div
+        style={{
+          height: "1px",
+          backgroundColor: "var(--colorNeutralStroke2)",
+          margin: "4px 0",
+        }}
+      />
+      <div
+        style={{
+          padding: "8px 16px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          fontSize: "14px",
+        }}
+        onClick={onSelectBatch}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor =
+            "var(--colorNeutralBackground1Hover)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "transparent";
+        }}
+      >
+        <SelectAllOn24Regular />
+        Select Batch
       </div>
       <div
         style={{

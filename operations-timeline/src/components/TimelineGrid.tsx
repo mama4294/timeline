@@ -542,6 +542,48 @@ export default function TimelineGrid() {
     }
   };
 
+  const handleContextMenuSelectBatch = () => {
+    if (contextMenu.operationId) {
+      // Find the operation to get its batchId
+      const operation =
+        operations.find((op) => op.id === contextMenu.operationId) ||
+        items.find((item) => item.id === contextMenu.operationId);
+
+      if (operation) {
+        let batchId: string | null = null;
+        
+        if ("batchId" in operation) {
+          // It's already an Operation object
+          batchId = operation.batchId;
+        } else {
+          // It's a timeline item
+          batchId = operation.batchId || null;
+        }
+
+        if (batchId) {
+          // Find all operations with the same batchId
+          const operationsInBatch = operations.filter(op => op.batchId === batchId);
+          const itemsInBatch = items.filter(item => item.batchId === batchId);
+          
+          // Combine the IDs from both sources
+          const batchOperationIds = new Set([
+            ...operationsInBatch.map(op => op.id),
+            ...itemsInBatch.map(item => item.id)
+          ]);
+
+          // Update selected items to include all operations in the batch
+          setSelectedItems(batchOperationIds);
+          
+          console.log(`Selected batch ${batchId} with ${batchOperationIds.size} operations`);
+        } else {
+          console.log("Operation has no batch ID");
+        }
+      }
+
+      setContextMenu((prev) => ({ ...prev, visible: false }));
+    }
+  };
+
   const handleContextMenuClose = () => {
     setContextMenu((prev) => ({ ...prev, visible: false }));
   };
@@ -784,6 +826,7 @@ export default function TimelineGrid() {
         y={contextMenu.y}
         onEdit={handleContextMenuEdit}
         onDelete={handleContextMenuDelete}
+        onSelectBatch={handleContextMenuSelectBatch}
         onClose={handleContextMenuClose}
       />
 
