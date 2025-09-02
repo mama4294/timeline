@@ -8,6 +8,8 @@ export interface IDataProvider {
   deleteEquipment(id: string): Promise<void>;
   saveOperation(operation: Partial<Operation>): Promise<Operation>;
   deleteOperation(id: string): Promise<void>;
+  saveBatch(batch: Partial<Batch>): Promise<Batch>;
+  deleteBatch(id: string): Promise<void>;
 }
 
 class MockDataProvider implements IDataProvider {
@@ -345,6 +347,56 @@ class MockDataProvider implements IDataProvider {
     const index = this.operations.findIndex((op) => op.id === id);
     if (index === -1) throw new Error("Operation not found");
     this.operations.splice(index, 1);
+  }
+
+  async saveBatch(batch: Partial<Batch>): Promise<Batch> {
+    if (batch.id && this.batches.find((b) => b.id === batch.id)) {
+      // Update existing batch
+      const index = this.batches.findIndex((b) => b.id === batch.id);
+      if (index === -1) throw new Error("Batch not found");
+
+      const updated = {
+        ...this.batches[index],
+        ...batch,
+        modifiedOn: new Date(),
+      };
+      this.batches[index] = updated;
+      return updated;
+    } else {
+      // Create new batch
+      if (!batch.id) throw new Error("Batch ID is required");
+
+      // Check if batch ID already exists
+      if (this.batches.find((b) => b.id === batch.id)) {
+        throw new Error("Batch ID already exists");
+      }
+
+      const newBatch: Batch = {
+        id: batch.id,
+        color: batch.color || "#0078d4",
+        createdOn: new Date(),
+        modifiedOn: new Date(),
+      };
+      this.batches.push(newBatch);
+      return newBatch;
+    }
+  }
+
+  async deleteBatch(id: string): Promise<void> {
+    const index = this.batches.findIndex((b) => b.id === id);
+    if (index === -1) throw new Error("Batch not found");
+
+    // Check if any operations are using this batch
+    const operationsUsingBatch = this.operations.filter(
+      (op) => op.batchId === id
+    );
+    if (operationsUsingBatch.length > 0) {
+      throw new Error(
+        `Cannot delete batch ${id}. It is being used by ${operationsUsingBatch.length} operation(s).`
+      );
+    }
+
+    this.batches.splice(index, 1);
   }
 }
 

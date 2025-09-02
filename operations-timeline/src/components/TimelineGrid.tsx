@@ -17,6 +17,7 @@ import { EquipmentDialog } from "./EquipmentDialog";
 import { OperationDialog } from "./OperationDialog";
 import { ContextMenu } from "./ContextMenu";
 import { DuplicateOperationsDialog } from "./DuplicateOperationsDialog";
+import { BatchManagement } from "./BatchManagement";
 import type { Equipment, Operation, Batch } from "../models/types";
 // types are available in models if needed
 
@@ -72,6 +73,9 @@ export default function TimelineGrid() {
   const [operationsToDuplicate, setOperationsToDuplicate] = useState<string[]>(
     []
   );
+
+  // Batch management state
+  const [isBatchManagementOpen, setIsBatchManagementOpen] = useState(false);
 
   // Helper function to create timeline items from operations
   const createTimelineItem = (operation: Operation) => {
@@ -509,6 +513,57 @@ export default function TimelineGrid() {
     }
   };
 
+  // Batch handlers
+  const handleManageBatches = () => {
+    setIsBatchManagementOpen(true);
+  };
+
+  const handleSaveBatch = async (batchData: Partial<Batch>) => {
+    try {
+      const savedBatch = await dataProvider.saveBatch(batchData);
+
+      // Update batches state
+      if (batches.find((b) => b.id === savedBatch.id)) {
+        // Update existing batch
+        setBatches((prev) =>
+          prev.map((batch) => (batch.id === savedBatch.id ? savedBatch : batch))
+        );
+      } else {
+        // Add new batch
+        setBatches((prev) => [...prev, savedBatch]);
+      }
+
+      console.log("Batch saved successfully:", savedBatch);
+    } catch (error) {
+      console.error("Failed to save batch:", error);
+      // TODO: Show error message to user
+      alert(
+        `Error: ${
+          error instanceof Error ? error.message : "Failed to save batch"
+        }`
+      );
+    }
+  };
+
+  const handleDeleteBatch = async (batchId: string) => {
+    try {
+      await dataProvider.deleteBatch(batchId);
+
+      // Remove from batches state
+      setBatches((prev) => prev.filter((batch) => batch.id !== batchId));
+
+      console.log("Batch deleted successfully:", batchId);
+    } catch (error) {
+      console.error("Failed to delete batch:", error);
+      // TODO: Show error message to user
+      alert(
+        `Error: ${
+          error instanceof Error ? error.message : "Failed to delete batch"
+        }`
+      );
+    }
+  };
+
   // Context menu handlers
   const handleContextMenuEdit = () => {
     if (contextMenu.operationId) {
@@ -688,6 +743,7 @@ export default function TimelineGrid() {
           onJumpToNow={jumpToNow}
           onAddEquipment={handleNewEquipment}
           onAddOperation={handleNewOperation}
+          onManageBatches={handleManageBatches}
         />
       </div>
 
@@ -944,6 +1000,15 @@ export default function TimelineGrid() {
         batches={batches}
         onOpenChange={setIsDuplicateDialogOpen}
         onDuplicate={handleDuplicateOperations}
+      />
+
+      {/* Batch Management Dialog */}
+      <BatchManagement
+        open={isBatchManagementOpen}
+        batches={batches}
+        onOpenChange={setIsBatchManagementOpen}
+        onSaveBatch={handleSaveBatch}
+        onDeleteBatch={handleDeleteBatch}
       />
     </div>
   );

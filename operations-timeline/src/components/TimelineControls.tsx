@@ -7,7 +7,11 @@ import {
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import { CalendarLtr24Regular, Add24Regular } from "@fluentui/react-icons";
+import {
+  CalendarLtr24Regular,
+  Add24Regular,
+  Grid24Regular,
+} from "@fluentui/react-icons";
 import { ZoomLevel } from "../hooks/useViewport";
 
 interface Props {
@@ -16,6 +20,7 @@ interface Props {
   onJumpToNow: () => void;
   onAddEquipment: () => void;
   onAddOperation: () => void;
+  onManageBatches: () => void;
 }
 
 const useStyles = makeStyles({
@@ -32,6 +37,7 @@ export default function TimelineControls({
   onJumpToNow,
   onAddEquipment,
   onAddOperation,
+  onManageBatches,
 }: Props) {
   const styles = useStyles();
 
@@ -83,6 +89,16 @@ export default function TimelineControls({
         onClick={onAddOperation}
       >
         Add Operation
+      </Button>
+
+      <ToolbarDivider />
+
+      <Button
+        appearance="subtle"
+        icon={<Grid24Regular />}
+        onClick={onManageBatches}
+      >
+        Manage Batches
       </Button>
     </Toolbar>
   );
