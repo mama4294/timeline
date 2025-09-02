@@ -48,6 +48,8 @@ export default function TimelineGrid() {
   const [operations, setOperations] = useState<Operation[]>([]);
   // Edit mode state: when false, editing actions are disabled
   const [editMode, setEditMode] = useState<boolean>(false);
+  // Search term for filtering
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Multi-select state
   const [selectedItems, setSelectedItems] = useState<Set<string | number>>(
@@ -88,6 +90,7 @@ export default function TimelineGrid() {
       id: operation.id,
       group: operation.equipmentId,
       title: operation.description,
+  type: operation.type,
       start_time: moment(operation.startTime).valueOf(),
       end_time: moment(operation.endTime).valueOf(),
       itemProps: {
@@ -133,6 +136,7 @@ export default function TimelineGrid() {
           group: o.equipmentId,
           title: o.description,
           description: o.description, // Add description for tooltip
+          type: o.type,
           batchId: o.batchId, // Add batchId for tooltip
           start_time: moment(o.startTime).valueOf(),
           end_time: moment(o.endTime).valueOf(),
@@ -166,17 +170,32 @@ export default function TimelineGrid() {
   const visibleTimeStart = moment(startDate).valueOf();
   const visibleTimeEnd = moment(endDate).valueOf();
 
-  // When in view mode, only display groups that have at least one item visible in the current range
+  // Filter items by search term (batchId, equipment title/tag, or operation type)
+  const displayedItems = items.filter((it) => {
+    if (!searchTerm) return true;
+    const s = searchTerm.toLowerCase();
+    const batchMatch = it.batchId && String(it.batchId).toLowerCase().includes(s);
+    const typeMatch = it.type && String(it.type).toLowerCase().includes(s);
+    const titleMatch = it.title && String(it.title).toLowerCase().includes(s);
+    const descMatch = it.description && String(it.description).toLowerCase().includes(s);
+    // find equipment
+    const eq = equipment.find((e) => String(e.id) === String(it.group));
+    const equipmentMatch = eq && (
+      String(eq.description).toLowerCase().includes(s) ||
+      String(eq.tag || "").toLowerCase().includes(s)
+    );
+    return Boolean(batchMatch || typeMatch || equipmentMatch || titleMatch || descMatch);
+  });
+
+  // When in view mode, only display groups that have at least one displayed item visible in the current range
   const displayedGroups = editMode
     ? groups
     : groups.filter((g) =>
-        items.some((it) => {
-          // item.group may be string/number, compare as string
+        displayedItems.some((it) => {
           const matchesGroup = String(it.group) === String(g.id);
           if (!matchesGroup) return false;
           const itemStart = Number(it.start_time);
           const itemEnd = Number(it.end_time);
-          // check intersection with [visibleTimeStart, visibleTimeEnd]
           return itemEnd >= visibleTimeStart && itemStart <= visibleTimeEnd;
         })
       );
@@ -777,6 +796,8 @@ export default function TimelineGrid() {
           setZoom={setZoom}
           editMode={editMode}
           setEditMode={setEditMode}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
           onJumpToNow={jumpToNow}
           onAddEquipment={handleNewEquipment}
           onAddOperation={handleNewOperation}
@@ -798,7 +819,7 @@ export default function TimelineGrid() {
       >
         <Timeline
           groups={displayedGroups}
-          items={items}
+          items={displayedItems}
           visibleTimeStart={visibleTimeStart}
           visibleTimeEnd={visibleTimeEnd}
           onTimeChange={handleTimeChange}

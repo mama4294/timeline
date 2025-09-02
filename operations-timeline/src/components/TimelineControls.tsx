@@ -6,6 +6,7 @@ import {
   Option,
   makeStyles,
   tokens,
+  Input,
 } from "@fluentui/react-components";
 import {
   CalendarLtr24Regular,
@@ -21,6 +22,8 @@ interface Props {
   setZoom: (z: ZoomLevel) => void;
   editMode: boolean;
   setEditMode: (mode: boolean) => void;
+  searchTerm: string;
+  setSearchTerm: (s: string) => void;
   onJumpToNow: () => void;
   onAddEquipment: () => void;
   onAddOperation: () => void;
@@ -40,6 +43,8 @@ export default function TimelineControls({
   setZoom,
   editMode,
   setEditMode,
+  searchTerm,
+  setSearchTerm,
   onJumpToNow,
   onAddEquipment,
   onAddOperation,
@@ -77,6 +82,14 @@ export default function TimelineControls({
 
   return (
     <Toolbar className={styles.toolbar} size="small">
+      {/* Search */}
+      <Input
+        placeholder="Search batch, equipment, or type"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm((e.target as HTMLInputElement).value)}
+        style={{ minWidth: 220, marginRight: 8 }}
+      />
+
       {/* Edit/View Mode Selector */}
       <Dropdown
         aria-labelledby="mode-label"
