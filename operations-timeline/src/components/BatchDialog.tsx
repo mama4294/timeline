@@ -18,7 +18,6 @@ interface BatchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (batch: Partial<Batch>) => void;
-  onDelete?: () => void;
 }
 
 export const BatchDialog: React.FC<BatchDialogProps> = ({
@@ -26,7 +25,6 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
   open,
   onOpenChange,
   onSave,
-  onDelete,
 }) => {
   const [batchId, setBatchId] = useState("");
   const [color, setColor] = useState("#0078d4");
@@ -63,11 +61,6 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
     onOpenChange(false);
   };
 
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete();
-    }
-  };
 
   const isValid = batchId.trim().length > 0;
 
@@ -134,11 +127,6 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
             </div>
           </DialogContent>
           <DialogActions>
-            {batch && onDelete && (
-              <Button appearance="subtle" onClick={handleDelete}>
-                Delete
-              </Button>
-            )}
             <DialogTrigger disableButtonEnhancement>
               <Button appearance="secondary" onClick={handleCancel}>
                 Cancel

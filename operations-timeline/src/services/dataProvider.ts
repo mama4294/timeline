@@ -303,10 +303,10 @@ class MockDataProvider implements IDataProvider {
     }
   }
 
-  async deleteEquipment(id: string): Promise<void> {
-    const index = this.equipment.findIndex((eq) => eq.id === id);
-    if (index === -1) throw new Error("Equipment not found");
-    this.equipment.splice(index, 1);
+  async deleteEquipment(_id: string): Promise<void> {
+  // Deletion of equipment is disabled by application policy.
+  // Throw an error to prevent accidental deletions.
+  throw new Error("Equipment deletion is disabled. You can create or update equipment but not delete it.");
   }
 
   async saveOperation(operation: Partial<Operation>): Promise<Operation> {
@@ -382,21 +382,10 @@ class MockDataProvider implements IDataProvider {
     }
   }
 
-  async deleteBatch(id: string): Promise<void> {
-    const index = this.batches.findIndex((b) => b.id === id);
-    if (index === -1) throw new Error("Batch not found");
-
-    // Check if any operations are using this batch
-    const operationsUsingBatch = this.operations.filter(
-      (op) => op.batchId === id
-    );
-    if (operationsUsingBatch.length > 0) {
-      throw new Error(
-        `Cannot delete batch ${id}. It is being used by ${operationsUsingBatch.length} operation(s).`
-      );
-    }
-
-    this.batches.splice(index, 1);
+  async deleteBatch(_id: string): Promise<void> {
+  // Deletion of batches is disabled by application policy.
+  // Throw an error to prevent accidental deletions.
+  throw new Error("Batch deletion is disabled. You can create or update batches but not delete them.");
   }
 }
 

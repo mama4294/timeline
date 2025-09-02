@@ -21,12 +21,7 @@ import {
   MenuList,
   MenuItem,
 } from "@fluentui/react-components";
-import {
-  Add24Regular,
-  MoreHorizontal24Regular,
-  Edit24Regular,
-  Delete24Regular,
-} from "@fluentui/react-icons";
+import { Add24Regular, MoreHorizontal24Regular, Edit24Regular } from "@fluentui/react-icons";
 import { BatchDialog } from "./BatchDialog";
 import type { Batch } from "../models/types";
 
@@ -35,7 +30,6 @@ interface BatchManagementProps {
   batches: Batch[];
   onOpenChange: (open: boolean) => void;
   onSaveBatch: (batch: Partial<Batch>) => void;
-  onDeleteBatch: (batchId: string) => void;
 }
 
 export const BatchManagement: React.FC<BatchManagementProps> = ({
@@ -43,11 +37,10 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
   batches,
   onOpenChange,
   onSaveBatch,
-  onDeleteBatch,
 }) => {
   const [isBatchDialogOpen, setIsBatchDialogOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<Batch | undefined>();
-  const [batchToDelete, setBatchToDelete] = useState<Batch | undefined>();
+  // Deletion disabled — no batch deletion allowed from UI
 
   const handleCreateBatch = () => {
     setSelectedBatch(undefined);
@@ -59,16 +52,7 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
     setIsBatchDialogOpen(true);
   };
 
-  const handleDeleteBatch = (batch: Batch) => {
-    setBatchToDelete(batch);
-  };
-
-  const confirmDelete = () => {
-    if (batchToDelete) {
-      onDeleteBatch(batchToDelete.id);
-      setBatchToDelete(undefined);
-    }
-  };
+  // handleDeleteBatch intentionally removed
 
   const handleSaveBatch = (batchData: Partial<Batch>) => {
     onSaveBatch(batchData);
@@ -76,13 +60,7 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
     setSelectedBatch(undefined);
   };
 
-  const handleDeleteBatchConfirmed = () => {
-    if (selectedBatch) {
-      onDeleteBatch(selectedBatch.id);
-      setIsBatchDialogOpen(false);
-      setSelectedBatch(undefined);
-    }
-  };
+  // handleDeleteBatchConfirmed removed
 
   return (
     <>
@@ -167,12 +145,7 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
                                 >
                                   Edit
                                 </MenuItem>
-                                <MenuItem
-                                  icon={<Delete24Regular />}
-                                  onClick={() => handleDeleteBatch(batch)}
-                                >
-                                  Delete
-                                </MenuItem>
+                                {/* Delete action removed */}
                               </MenuList>
                             </MenuPopover>
                           </Menu>
@@ -216,34 +189,9 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
         open={isBatchDialogOpen}
         onOpenChange={setIsBatchDialogOpen}
         onSave={handleSaveBatch}
-        onDelete={selectedBatch ? handleDeleteBatchConfirmed : undefined}
       />
 
-      {/* Delete Confirmation Dialog */}
-      {batchToDelete && (
-        <Dialog
-          open={!!batchToDelete}
-          onOpenChange={(_, data) => !data.open && setBatchToDelete(undefined)}
-        >
-          <DialogSurface>
-            <DialogBody>
-              <DialogTitle>Delete Batch</DialogTitle>
-              <DialogContent>
-                Are you sure you want to delete batch "{batchToDelete.id}"? This
-                action cannot be undone.
-              </DialogContent>
-              <DialogActions>
-                <DialogTrigger disableButtonEnhancement>
-                  <Button appearance="secondary">Cancel</Button>
-                </DialogTrigger>
-                <Button appearance="primary" onClick={confirmDelete}>
-                  Delete
-                </Button>
-              </DialogActions>
-            </DialogBody>
-          </DialogSurface>
-        </Dialog>
-      )}
+  {/* Deletion disabled — confirmation dialog removed */}
     </>
   );
 };

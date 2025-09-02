@@ -28,7 +28,6 @@ interface EquipmentDialogProps {
     data: DialogOpenChangeData
   ) => void;
   onSave: (equipment: Partial<Equipment>) => void;
-  onDelete?: () => void;
 }
 
 export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
@@ -36,7 +35,6 @@ export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
   open,
   onOpenChange,
   onSave,
-  onDelete,
 }) => {
   const [formData, setFormData] = useState<Partial<Equipment>>(
     equipment ?? {
@@ -77,21 +75,7 @@ export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
     });
   }, [formData, onSave, onOpenChange]);
 
-  const handleDelete = useCallback(() => {
-    if (onDelete) {
-      onDelete();
-      const syntheticEvent = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
-        target: document.body,
-      } as unknown as MouseEvent<HTMLElement>;
-      onOpenChange(syntheticEvent, {
-        type: "triggerClick",
-        open: false,
-        event: syntheticEvent,
-      });
-    }
-  }, [onDelete, onOpenChange]);
+  // Deletion disabled for equipment — only create and edit allowed
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -135,11 +119,7 @@ export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
           <DialogTrigger disableButtonEnhancement>
             <Button appearance="secondary">Cancel</Button>
           </DialogTrigger>
-          {equipment && onDelete && (
-            <Button appearance="subtle" onClick={handleDelete}>
-              Delete
-            </Button>
-          )}
+          {/* Delete disabled — only create and edit allowed */}
           <Button appearance="primary" onClick={handleSave}>
             {equipment ? "Save" : "Add"}
           </Button>

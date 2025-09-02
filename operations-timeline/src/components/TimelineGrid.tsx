@@ -457,17 +457,7 @@ export default function TimelineGrid() {
     }
   };
 
-  const handleDeleteEquipment = async () => {
-    if (selectedEquipment) {
-      try {
-        await dataProvider.deleteEquipment(selectedEquipment.id);
-        await refreshEquipment();
-      } catch (error) {
-        console.error("Failed to delete equipment:", error);
-        // TODO: Show error message to user
-      }
-    }
-  };
+  // Equipment deletion disabled — only create and edit allowed
 
   // Operation handlers
   const handleNewOperation = () => {
@@ -593,24 +583,7 @@ export default function TimelineGrid() {
     }
   };
 
-  const handleDeleteBatch = async (batchId: string) => {
-    try {
-      await dataProvider.deleteBatch(batchId);
-
-      // Remove from batches state
-      setBatches((prev) => prev.filter((batch) => batch.id !== batchId));
-
-      console.log("Batch deleted successfully:", batchId);
-    } catch (error) {
-      console.error("Failed to delete batch:", error);
-      // TODO: Show error message to user
-      alert(
-        `Error: ${
-          error instanceof Error ? error.message : "Failed to delete batch"
-        }`
-      );
-    }
-  };
+  // Batch deletion disabled — not supported from UI
 
   // Context menu handlers
   const handleContextMenuEdit = () => {
@@ -1032,7 +1005,6 @@ export default function TimelineGrid() {
           }
         }}
         onSave={handleSaveEquipment}
-        onDelete={selectedEquipment ? handleDeleteEquipment : undefined}
       />
 
       {/* Operation Dialog */}
@@ -1066,7 +1038,6 @@ export default function TimelineGrid() {
         batches={batches}
         onOpenChange={setIsBatchManagementOpen}
         onSaveBatch={handleSaveBatch}
-        onDeleteBatch={handleDeleteBatch}
       />
     </div>
   );
