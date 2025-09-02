@@ -14,6 +14,7 @@ import {
   Grid24Regular,
   ZoomIn24Regular,
   ZoomOut24Regular,
+  Search24Regular,
 } from "@fluentui/react-icons";
 import { ZoomLevel } from "../hooks/useViewport";
 
@@ -35,6 +36,19 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     borderRadius: tokens.borderRadiusMedium,
     padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
+    display: "flex",
+  gap: tokens.spacingHorizontalS,
+    alignItems: "center",
+    flexWrap: "wrap",
+    // allow content to compress on small screens
+    maxWidth: "100%",
+  },
+  search: {
+    minWidth: "140px",
+    marginRight: tokens.spacingHorizontalS,
+  },
+  select: {
+    minWidth: "110px",
   },
 });
 
@@ -84,30 +98,29 @@ export default function TimelineControls({
     <Toolbar className={styles.toolbar} size="small">
       {/* Search */}
       <Input
-        placeholder="Search batch, equipment, or type"
+        className={styles.search}
+        placeholder=""
+        aria-label="Search"
         value={searchTerm}
+        contentBefore={<Search24Regular />}
         onChange={(e) => setSearchTerm((e.target as HTMLInputElement).value)}
-        style={{ minWidth: 220, marginRight: 8 }}
       />
 
-      {/* Edit/View Mode Selector */}
-      <Dropdown
-        aria-labelledby="mode-label"
-        placeholder="Select mode"
-        value={editMode ? "Edit Mode" : "View Mode"}
-        onOptionSelect={(_, data) => setEditMode(data.optionValue === "edit")}
-      >
-        {modeOptions.map((option) => (
-          <Option key={option.key} value={option.key}>
-            {option.text}
-          </Option>
-        ))}
-      </Dropdown>
+
 
       <ToolbarDivider />
 
+            <Button
+        appearance="subtle"
+        icon={<CalendarLtr24Regular />}
+        onClick={onJumpToNow}
+      >
+        Now
+      </Button>
+
       {/* Zoom Selector */}
       <Dropdown
+        className={styles.select}
         aria-labelledby="zoom-label"
         placeholder="Select zoom level"
         value={zoomOptions.find((option) => option.key === zoom)?.text}
@@ -138,19 +151,27 @@ export default function TimelineControls({
 
       <ToolbarDivider />
 
-      <Button
-        appearance="subtle"
-        icon={<CalendarLtr24Regular />}
-        onClick={onJumpToNow}
+            {/* Edit/View Mode Selector */}
+      <Dropdown
+        className={styles.select}
+        aria-labelledby="mode-label"
+        placeholder="Select mode"
+        value={editMode ? "Edit Mode" : "View Mode"}
+        onOptionSelect={(_, data) => setEditMode(data.optionValue === "edit")}
       >
-        Jump to Now
-      </Button>
+        {modeOptions.map((option) => (
+          <Option key={option.key} value={option.key}>
+            {option.text}
+          </Option>
+        ))}
+      </Dropdown>
+
+
       {editMode && (
         <>
-          <ToolbarDivider />
 
           <Button
-            appearance="primary"
+            appearance="subtle"
             icon={<Add24Regular />}
             onClick={onAddEquipment}
           >
@@ -158,14 +179,12 @@ export default function TimelineControls({
           </Button>
 
           <Button
-            appearance="outline"
+            appearance="subtle"
             icon={<Add24Regular />}
             onClick={onAddOperation}
           >
             Add Operation
           </Button>
-
-          <ToolbarDivider />
 
           <Button
             appearance="subtle"
