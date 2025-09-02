@@ -601,20 +601,17 @@ export default function TimelineGrid() {
         flexDirection: "column",
         minHeight: "0", // Important for nested flex containers
         overflow: "hidden", // Prevent double scrollbars
+        gap: "12px", // Space between controls and timeline
+        padding: "12px", // Padding around the entire component
       }}
     >
+      {/* Command Bar Container */}
       <div
         style={{
           backgroundColor: "white",
-          borderRadius: "4px",
+          borderRadius: "8px",
           boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
           padding: "12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-          flex: 1,
-          minHeight: "0", // Important for nested flex containers
-          overflow: "hidden", // Contains the timeline's scroll
         }}
       >
         <TimelineControls
@@ -624,27 +621,27 @@ export default function TimelineGrid() {
           onAddEquipment={handleNewEquipment}
           onAddOperation={handleNewOperation}
         />
+      </div>
 
-        <EquipmentDialog
-          equipment={selectedEquipment}
-          open={isDialogOpen}
-          onOpenChange={(_, data) => setIsDialogOpen(data.open)}
-          onSave={handleSaveEquipment}
-          onDelete={selectedEquipment ? handleDeleteEquipment : undefined}
-        />
-
-        <OperationDialog
-          operation={selectedOperation}
-          open={isOperationDialogOpen}
-          onOpenChange={(_, data) => setIsOperationDialogOpen(data.open)}
-          onSave={handleSaveOperation}
-          onDelete={selectedOperation ? handleDeleteOperation : undefined}
-          equipment={equipment}
-          batches={batches}
-        />
-
+      {/* Timeline Container */}
+      <div
+        style={{
+          backgroundColor: "white",
+          borderRadius: "8px",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+          padding: "12px",
+          flex: 1,
+          minHeight: "0", // Important for nested flex containers
+          overflow: "hidden", // Contains the timeline's scroll
+        }}
+      >
         <div
           className="timeline-grid"
+          style={{
+            height: "400px", // Explicit height for timeline
+            display: "flex",
+            flexDirection: "column",
+          }}
           onClick={(e) => {
             // Clear selection when clicking on empty space (not on items)
             if (

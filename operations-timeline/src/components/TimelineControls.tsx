@@ -22,7 +22,6 @@ const useStyles = makeStyles({
   toolbar: {
     backgroundColor: tokens.colorNeutralBackground1,
     borderRadius: tokens.borderRadiusMedium,
-    boxShadow: tokens.shadow4,
     padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
   },
 });
