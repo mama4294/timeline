@@ -105,38 +105,15 @@
 .timeline-grid .rct-horizontal-lines .rct-hl-even,
 .timeline-grid .rct-horizontal-lines .rct-hl-odd {
   border-bottom: 1px solid #e0e0e0;
-  height: 32px !important;
-  line-height: 32px !important;
-}
-
-/* Align timeline rows */
-.timeline-grid .rct-rows .rct-row {
-  height: 32px !important;
-  line-height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
-}
-
-/* Align items within rows */
-.timeline-grid .rct-items .rct-item {
-  height: 28px !important; /* Slightly smaller than row height */
-  margin-top: 2px !important; /* Center in the 32px row */
-  display: flex !important;
-  align-items: center !important;
-  border-radius: 2px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.timeline-grid .rct-vertical-lines {
-  height: 100% !important;
-  position: absolute !important;
-  top: 0 !important;
-  bottom: 0 !important;
 }
 
 .timeline-grid .rct-vertical-lines .rct-vl {
   border-left: 1px solid #f0f0f0;
-  height: 100% !important;
+}
+
+.timeline-grid .rct-item {
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .timeline-grid .rct-item.selected {

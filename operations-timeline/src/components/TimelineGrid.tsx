@@ -267,13 +267,11 @@ export default function TimelineGrid() {
             <div
               style={{
                 cursor: "pointer",
-                padding: "2px 8px",
+                padding: "4px 8px",
                 display: "flex",
                 flexDirection: "column",
-                height: "100%",
                 justifyContent: "center",
-                minHeight: "32px",
-                gap: "0px", // Minimal gap between elements
+                height: "100%",
               }}
               onClick={() => handleEditEquipment(group.id)}
             >
@@ -281,8 +279,7 @@ export default function TimelineGrid() {
                 style={{
                   fontWeight: "bold",
                   fontSize: "0.9em",
-                  lineHeight: "1",
-                  marginBottom: "1px", // Tiny margin between text lines
+                  lineHeight: "1.2",
                 }}
               >
                 {group.title}
@@ -291,7 +288,7 @@ export default function TimelineGrid() {
                 style={{
                   fontSize: "0.75em",
                   color: "#666",
-                  lineHeight: "1",
+                  lineHeight: "1.2",
                 }}
               >
                 {group.rightTitle}
