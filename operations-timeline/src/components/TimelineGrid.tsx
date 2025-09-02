@@ -793,6 +793,25 @@ export default function TimelineGrid() {
           onItemMove={handleItemMove}
           onItemResize={handleItemResize}
           onItemSelect={handleItemSelect}
+          onCanvasDoubleClick={(groupId: any, time: number) => {
+            if (!editMode) return;
+            // groupId should be the equipment id
+            const equipmentId = String(groupId);
+            const start = new Date(time);
+            const end = new Date(time + 24 * 60 * 60 * 1000); // default 1 day
+            setSelectedOperation({
+              id: undefined as any,
+              equipmentId,
+              batchId: null,
+              startTime: start,
+              endTime: end,
+              type: "Production",
+              description: "",
+              createdOn: new Date(),
+              modifiedOn: new Date(),
+            });
+            setIsOperationDialogOpen(true);
+          }}
           stackItems={true}
           dragSnap={30 * 60 * 1000}
           lineHeight={40}
