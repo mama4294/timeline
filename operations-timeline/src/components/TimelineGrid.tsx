@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { Tooltip } from "@fluentui/react-components";
 import Timeline, {
   TimelineMarkers,
   TodayMarker,
@@ -118,6 +119,8 @@ export default function TimelineGrid() {
           id: o.id,
           group: o.equipmentId,
           title: o.description,
+          description: o.description, // Add description for tooltip
+          batchId: o.batchId, // Add batchId for tooltip
           start_time: moment(o.startTime).valueOf(),
           end_time: moment(o.endTime).valueOf(),
           itemProps: {
@@ -708,30 +711,37 @@ export default function TimelineGrid() {
               return (
                 <div {...itemProps} data-selected={isSelected}>
                   {canResize && <div {...leftResizeProps} />}
-                  <div
-                    style={{
-                      height: "100%",
-                      position: "relative",
-                      paddingLeft: 4,
-                      paddingRight: 4,
-                      display: "flex",
-                      alignItems: "center",
-                      overflow: "hidden",
-                    }}
+                  <Tooltip
+                    content={`${item.description}${
+                      item.batchId ? ` (Batch: ${item.batchId})` : ""
+                    }`}
+                    relationship="description"
                   >
                     <div
                       style={{
-                        fontSize: "12px",
-                        color: "white",
-                        fontWeight: "500",
-                        textOverflow: "ellipsis",
+                        height: "100%",
+                        position: "relative",
+                        paddingLeft: 4,
+                        paddingRight: 4,
+                        display: "flex",
+                        alignItems: "center",
                         overflow: "hidden",
-                        whiteSpace: "nowrap",
                       }}
                     >
-                      {item.title}
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "white",
+                          fontWeight: "500",
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {item.title}
+                      </div>
                     </div>
-                  </div>
+                  </Tooltip>
                   {canResize && <div {...rightResizeProps} />}
                 </div>
               );
