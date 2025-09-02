@@ -16,6 +16,7 @@ import { dataProvider } from "../services/dataProvider";
 import { EquipmentDialog } from "./EquipmentDialog";
 import { OperationDialog } from "./OperationDialog";
 import { ContextMenu } from "./ContextMenu";
+import { DuplicateOperationsDialog } from "./DuplicateOperationsDialog";
 import type { Equipment, Operation, Batch } from "../models/types";
 // types are available in models if needed
 
@@ -65,6 +66,12 @@ export default function TimelineGrid() {
     y: 0,
     operationId: null,
   });
+
+  // Duplicate dialog state
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+  const [operationsToDuplicate, setOperationsToDuplicate] = useState<string[]>(
+    []
+  );
 
   // Helper function to create timeline items from operations
   const createTimelineItem = (operation: Operation) => {
@@ -591,6 +598,64 @@ export default function TimelineGrid() {
     }
   };
 
+  const handleContextMenuDuplicate = () => {
+    if (contextMenu.operationId) {
+      // Get the currently selected operations (if any) or just the clicked operation
+      const operationIds =
+        selectedItems.size > 0
+          ? Array.from(selectedItems).map(String)
+          : [contextMenu.operationId];
+
+      setOperationsToDuplicate(operationIds);
+      setIsDuplicateDialogOpen(true);
+      setContextMenu((prev) => ({ ...prev, visible: false }));
+    }
+  };
+
+  const handleDuplicateOperations = async (batchId: string | null) => {
+    try {
+      const duplicatedOperations: Operation[] = [];
+
+      for (const operationId of operationsToDuplicate) {
+        // Find the operation to duplicate
+        const originalOperation = operations.find(
+          (op) => op.id === operationId
+        );
+
+        if (originalOperation) {
+          // Create a new operation with the same properties but new ID and batch
+          const newOperation: Partial<Operation> = {
+            equipmentId: originalOperation.equipmentId,
+            batchId: batchId,
+            startTime: new Date(
+              originalOperation.startTime.getTime() + 24 * 60 * 60 * 1000
+            ), // Add 1 day
+            endTime: new Date(
+              originalOperation.endTime.getTime() + 24 * 60 * 60 * 1000
+            ), // Add 1 day
+            type: originalOperation.type,
+            description: originalOperation.description,
+          };
+
+          // Save the new operation via data provider (without ID to create new)
+          const savedOperation = await dataProvider.saveOperation(newOperation);
+          duplicatedOperations.push(savedOperation);
+
+          // Add to operations state
+          setOperations((prev) => [...prev, savedOperation]);
+
+          // Add to timeline items
+          const timelineItem = createTimelineItem(savedOperation);
+          setItems((prev) => [...prev, timelineItem]);
+        }
+      }
+
+      console.log(`Duplicated ${duplicatedOperations.length} operations`);
+    } catch (error) {
+      console.error("Error duplicating operations:", error);
+    }
+  };
+
   const handleContextMenuClose = () => {
     setContextMenu((prev) => ({ ...prev, visible: false }));
   };
@@ -838,6 +903,7 @@ export default function TimelineGrid() {
         onEdit={handleContextMenuEdit}
         onDelete={handleContextMenuDelete}
         onSelectBatch={handleContextMenuSelectBatch}
+        onDuplicate={handleContextMenuDuplicate}
         onClose={handleContextMenuClose}
       />
 
@@ -869,6 +935,15 @@ export default function TimelineGrid() {
         onDelete={selectedOperation ? handleDeleteOperation : undefined}
         equipment={equipment}
         batches={batches}
+      />
+
+      {/* Duplicate Operations Dialog */}
+      <DuplicateOperationsDialog
+        open={isDuplicateDialogOpen}
+        operationIds={operationsToDuplicate}
+        batches={batches}
+        onOpenChange={setIsDuplicateDialogOpen}
+        onDuplicate={handleDuplicateOperations}
       />
     </div>
   );
