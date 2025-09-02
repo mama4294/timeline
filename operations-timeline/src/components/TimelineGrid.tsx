@@ -46,6 +46,8 @@ export default function TimelineGrid() {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
+  // Edit mode state: when false, editing actions are disabled
+  const [editMode, setEditMode] = useState<boolean>(false);
 
   // Multi-select state
   const [selectedItems, setSelectedItems] = useState<Set<string | number>>(
@@ -175,8 +177,9 @@ export default function TimelineGrid() {
   const handleItemMove = async (
     itemId: string | number,
     dragTime: number,
-    newGroupOrder: number
+  _newGroupOrder: number
   ) => {
+    if (!editMode) return; // Prevent moves when not in edit mode
     const item = items.find((item) => item.id === itemId);
     if (!item) return;
 
@@ -267,6 +270,7 @@ export default function TimelineGrid() {
     time: number,
     edge: string
   ) => {
+  if (!editMode) return; // Prevent resizing when not in edit mode
     const item = items.find((item) => item.id === itemId);
     if (!item) return;
 
@@ -340,6 +344,11 @@ export default function TimelineGrid() {
     // Handle delete functionality for keyboard
     const handleDelete = async (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") {
+        if (!editMode) {
+          console.log("Delete disabled in View Mode");
+          return;
+        }
+
         // Delete all selected items
         const itemsToDelete = Array.from(selectedItems);
 
@@ -375,6 +384,7 @@ export default function TimelineGrid() {
   };
 
   const handleEditEquipment = async (groupId: string) => {
+  if (!editMode) return; // Editing equipment not allowed in view mode
     console.log("Group ID clicked:", groupId);
     const allEquipment = await dataProvider.getEquipment();
     console.log("All equipment:", allEquipment);
@@ -387,8 +397,9 @@ export default function TimelineGrid() {
   };
 
   const handleNewEquipment = () => {
-    setSelectedEquipment(undefined);
-    setIsDialogOpen(true);
+  if (!editMode) return;
+  setSelectedEquipment(undefined);
+  setIsDialogOpen(true);
   };
 
   const refreshEquipment = async () => {
@@ -426,12 +437,15 @@ export default function TimelineGrid() {
 
   // Operation handlers
   const handleNewOperation = () => {
-    setSelectedOperation(undefined);
-    setIsOperationDialogOpen(true);
+  if (!editMode) return;
+  setSelectedOperation(undefined);
+  setIsOperationDialogOpen(true);
   };
 
   const handleEditOperation = (operationId: string) => {
-    // Find the operation in the operations state first, then items if needed
+  if (!editMode) return; // Editing operations not allowed in view mode
+
+  // Find the operation in the operations state first, then items if needed
     let operation = operations.find((op) => op.id === operationId);
 
     if (!operation) {
@@ -566,6 +580,7 @@ export default function TimelineGrid() {
 
   // Context menu handlers
   const handleContextMenuEdit = () => {
+    if (!editMode) return;
     if (contextMenu.operationId) {
       handleEditOperation(contextMenu.operationId);
       setContextMenu((prev) => ({ ...prev, visible: false }));
@@ -573,6 +588,7 @@ export default function TimelineGrid() {
   };
 
   const handleContextMenuDelete = () => {
+    if (!editMode) return;
     if (contextMenu.operationId) {
       // Find the operation and set it as selected, then delete
       const operation =
@@ -654,6 +670,7 @@ export default function TimelineGrid() {
   };
 
   const handleContextMenuDuplicate = () => {
+    if (!editMode) return;
     if (contextMenu.operationId) {
       // Get the currently selected operations (if any) or just the clicked operation
       const operationIds =
@@ -743,6 +760,8 @@ export default function TimelineGrid() {
         <TimelineControls
           zoom={zoom}
           setZoom={setZoom}
+          editMode={editMode}
+          setEditMode={setEditMode}
           onJumpToNow={jumpToNow}
           onAddEquipment={handleNewEquipment}
           onAddOperation={handleNewOperation}
@@ -768,8 +787,8 @@ export default function TimelineGrid() {
           visibleTimeStart={visibleTimeStart}
           visibleTimeEnd={visibleTimeEnd}
           onTimeChange={handleTimeChange}
-          canMove={true}
-          canResize={selectedItems.size <= 1 ? "both" : false}
+          canMove={editMode}
+          canResize={editMode ? (selectedItems.size <= 1 ? "both" : false) : false}
           canChangeGroup={false}
           onItemMove={handleItemMove}
           onItemResize={handleItemResize}
@@ -789,6 +808,7 @@ export default function TimelineGrid() {
               },
               onDoubleClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
+                if (!editMode) return;
                 handleEditOperation(String(item.id));
               },
               onContextMenu: (e: React.MouseEvent) => {

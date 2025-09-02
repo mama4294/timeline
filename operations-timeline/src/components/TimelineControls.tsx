@@ -17,6 +17,8 @@ import { ZoomLevel } from "../hooks/useViewport";
 interface Props {
   zoom: ZoomLevel;
   setZoom: (z: ZoomLevel) => void;
+  editMode: boolean;
+  setEditMode: (mode: boolean) => void;
   onJumpToNow: () => void;
   onAddEquipment: () => void;
   onAddOperation: () => void;
@@ -34,6 +36,8 @@ const useStyles = makeStyles({
 export default function TimelineControls({
   zoom,
   setZoom,
+  editMode,
+  setEditMode,
   onJumpToNow,
   onAddEquipment,
   onAddOperation,
@@ -48,8 +52,30 @@ export default function TimelineControls({
     { key: "year", text: "Year View" },
   ];
 
+  const modeOptions = [
+    { key: "view", text: "View Mode" },
+    { key: "edit", text: "Edit Mode" },
+  ];
+
   return (
     <Toolbar className={styles.toolbar} size="small">
+      {/* Edit/View Mode Selector */}
+      <Dropdown
+        aria-labelledby="mode-label"
+        placeholder="Select mode"
+        value={editMode ? "Edit Mode" : "View Mode"}
+        onOptionSelect={(_, data) => setEditMode(data.optionValue === "edit")}
+      >
+        {modeOptions.map((option) => (
+          <Option key={option.key} value={option.key}>
+            {option.text}
+          </Option>
+        ))}
+      </Dropdown>
+
+      <ToolbarDivider />
+
+      {/* Zoom Selector */}
       <Dropdown
         aria-labelledby="zoom-label"
         placeholder="Select zoom level"
@@ -79,6 +105,7 @@ export default function TimelineControls({
         appearance="primary"
         icon={<Add24Regular />}
         onClick={onAddEquipment}
+        disabled={!editMode}
       >
         Add Equipment
       </Button>
@@ -87,6 +114,7 @@ export default function TimelineControls({
         appearance="outline"
         icon={<Add24Regular />}
         onClick={onAddOperation}
+        disabled={!editMode}
       >
         Add Operation
       </Button>
@@ -97,6 +125,7 @@ export default function TimelineControls({
         appearance="subtle"
         icon={<Grid24Regular />}
         onClick={onManageBatches}
+        disabled={!editMode}
       >
         Manage Batches
       </Button>
