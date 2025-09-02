@@ -166,6 +166,21 @@ export default function TimelineGrid() {
   const visibleTimeStart = moment(startDate).valueOf();
   const visibleTimeEnd = moment(endDate).valueOf();
 
+  // When in view mode, only display groups that have at least one item visible in the current range
+  const displayedGroups = editMode
+    ? groups
+    : groups.filter((g) =>
+        items.some((it) => {
+          // item.group may be string/number, compare as string
+          const matchesGroup = String(it.group) === String(g.id);
+          if (!matchesGroup) return false;
+          const itemStart = Number(it.start_time);
+          const itemEnd = Number(it.end_time);
+          // check intersection with [visibleTimeStart, visibleTimeEnd]
+          return itemEnd >= visibleTimeStart && itemStart <= visibleTimeEnd;
+        })
+      );
+
   const handleTimeChange = (
     visibleTimeStart: number,
     visibleTimeEnd: number
@@ -782,7 +797,7 @@ export default function TimelineGrid() {
         }}
       >
         <Timeline
-          groups={groups}
+          groups={displayedGroups}
           items={items}
           visibleTimeStart={visibleTimeStart}
           visibleTimeEnd={visibleTimeEnd}
@@ -900,14 +915,14 @@ export default function TimelineGrid() {
           groupRenderer={({ group }) => (
             <div
               style={{
-                cursor: "pointer",
+                cursor: editMode ? "pointer" : "default",
                 padding: "4px 8px",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
                 height: "100%",
               }}
-              onClick={() => handleEditEquipment(group.id)}
+              onClick={() => editMode && handleEditEquipment(group.id)}
             >
               <div
                 style={{
