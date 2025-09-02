@@ -131,37 +131,37 @@ export default function TimelineControls({
       >
         Jump to Now
       </Button>
+      {editMode && (
+        <>
+          <ToolbarDivider />
 
-      <ToolbarDivider />
+          <Button
+            appearance="primary"
+            icon={<Add24Regular />}
+            onClick={onAddEquipment}
+          >
+            Add Equipment
+          </Button>
 
-      <Button
-        appearance="primary"
-        icon={<Add24Regular />}
-        onClick={onAddEquipment}
-        disabled={!editMode}
-      >
-        Add Equipment
-      </Button>
+          <Button
+            appearance="outline"
+            icon={<Add24Regular />}
+            onClick={onAddOperation}
+          >
+            Add Operation
+          </Button>
 
-      <Button
-        appearance="outline"
-        icon={<Add24Regular />}
-        onClick={onAddOperation}
-        disabled={!editMode}
-      >
-        Add Operation
-      </Button>
+          <ToolbarDivider />
 
-      <ToolbarDivider />
-
-      <Button
-        appearance="subtle"
-        icon={<Grid24Regular />}
-        onClick={onManageBatches}
-        disabled={!editMode}
-      >
-        Manage Batches
-      </Button>
+          <Button
+            appearance="subtle"
+            icon={<Grid24Regular />}
+            onClick={onManageBatches}
+          >
+            Manage Batches
+          </Button>
+        </>
+      )}
     </Toolbar>
   );
 }
