@@ -11,6 +11,8 @@ import {
   CalendarLtr24Regular,
   Add24Regular,
   Grid24Regular,
+  ZoomIn24Regular,
+  ZoomOut24Regular,
 } from "@fluentui/react-icons";
 import { ZoomLevel } from "../hooks/useViewport";
 
@@ -57,6 +59,21 @@ export default function TimelineControls({
     { key: "edit", text: "Edit Mode" },
   ];
 
+  const zoomOrder: ZoomLevel[] = ["hour", "day", "week", "year"];
+  const currentZoomIndex = zoomOrder.findIndex((z) => z === zoom);
+  const canZoomIn = currentZoomIndex > 0;
+  const canZoomOut = currentZoomIndex < zoomOrder.length - 1;
+
+  const handleZoomIn = () => {
+    if (!canZoomIn) return;
+    setZoom(zoomOrder[currentZoomIndex - 1]);
+  };
+
+  const handleZoomOut = () => {
+    if (!canZoomOut) return;
+    setZoom(zoomOrder[currentZoomIndex + 1]);
+  };
+
   return (
     <Toolbar className={styles.toolbar} size="small">
       {/* Edit/View Mode Selector */}
@@ -88,6 +105,22 @@ export default function TimelineControls({
           </Option>
         ))}
       </Dropdown>
+
+      <Button
+        appearance="subtle"
+        icon={<ZoomIn24Regular />}
+        onClick={handleZoomIn}
+        disabled={!canZoomIn}
+        aria-label="Zoom in"
+      />
+
+      <Button
+        appearance="subtle"
+        icon={<ZoomOut24Regular />}
+        onClick={handleZoomOut}
+        disabled={!canZoomOut}
+        aria-label="Zoom out"
+      />
 
       <ToolbarDivider />
 
