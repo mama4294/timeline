@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Timeline, {
   TimelineMarkers,
   TodayMarker,
@@ -43,6 +43,12 @@ export default function TimelineGrid() {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
+
+  // Multi-select state
+  const [selectedItems, setSelectedItems] = useState<Set<string | number>>(new Set());
+
+  // Ref for debouncing drag saves
+  const dragSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
@@ -158,57 +164,86 @@ export default function TimelineGrid() {
     const item = items.find((item) => item.id === itemId);
     if (!item) return;
 
-    const difference = dragTime - item.start_time;
-    const newStartTime = new Date(dragTime);
-    const newEndTime = new Date(item.end_time + difference);
-    const newEquipmentId = groups[newGroupOrder].id;
+    // Determine which items to move - if the dragged item is selected, move all selected items
+    const itemsToMove = selectedItems.has(itemId) 
+      ? Array.from(selectedItems) 
+      : [itemId];
 
-    // Update local state immediately for smooth UI
-    const newItems = items.map((item) => {
-      if (item.id === itemId) {
+    const difference = dragTime - item.start_time;
+
+    // Update local state immediately for smooth UI - this provides real-time visual feedback
+    const newItems = items.map((currentItem) => {
+      if (itemsToMove.includes(currentItem.id)) {
         return {
-          ...item,
-          start_time: dragTime,
-          end_time: item.end_time + difference,
-          group: newEquipmentId,
+          ...currentItem,
+          start_time: currentItem.start_time + difference,
+          end_time: currentItem.end_time + difference,
+          // Keep original equipment group - no equipment changes allowed
+          group: currentItem.group,
         };
       }
-      return item;
+      return currentItem;
     });
+    
+    // Set items immediately to show all selected items moving in real-time
     setItems(newItems);
 
-    // Update operations state
-    setOperations((prev) =>
-      prev.map((op) => {
-        if (op.id === itemId) {
-          return {
-            ...op,
-            startTime: newStartTime,
-            endTime: newEndTime,
-            equipmentId: newEquipmentId,
-            modifiedOn: new Date(),
-          };
-        }
-        return op;
-      })
-    );
-
-    // Save to backend
-    try {
-      const operationToUpdate = operations.find((op) => op.id === itemId);
-      if (operationToUpdate) {
-        await dataProvider.saveOperation({
-          ...operationToUpdate,
-          startTime: newStartTime,
-          endTime: newEndTime,
-          equipmentId: newEquipmentId,
-          modifiedOn: new Date(),
-        });
-      }
-    } catch (error) {
-      console.error("Failed to save operation move:", error);
-      // TODO: Show error message to user and potentially revert changes
+    // Debounced save - only save after user stops dragging for a brief moment
+    if (dragSaveTimeoutRef.current) {
+      clearTimeout(dragSaveTimeoutRef.current);
     }
+    dragSaveTimeoutRef.current = setTimeout(async () => {
+      // Update operations state and save to backend
+      const updatePromises = [];
+      
+      for (const moveItemId of itemsToMove) {
+        const originalItem = items.find(i => i.id === moveItemId);
+        if (!originalItem) continue;
+        
+        const newStartTime = new Date(originalItem.start_time + difference);
+        const newEndTime = new Date(originalItem.end_time + difference);
+
+        // Update operations state
+        setOperations((prev) =>
+          prev.map((op) => {
+            if (op.id === moveItemId) {
+              return {
+                ...op,
+                startTime: newStartTime,
+                endTime: newEndTime,
+                // Keep original equipment - no equipment changes allowed
+                equipmentId: op.equipmentId,
+                modifiedOn: new Date(),
+              };
+            }
+            return op;
+          })
+        );
+
+        // Queue save operation
+        const operationToUpdate = operations.find((op) => op.id === moveItemId);
+        if (operationToUpdate) {
+          updatePromises.push(
+            dataProvider.saveOperation({
+              ...operationToUpdate,
+              startTime: newStartTime,
+              endTime: newEndTime,
+              // Keep original equipment
+              equipmentId: operationToUpdate.equipmentId,
+              modifiedOn: new Date(),
+            })
+          );
+        }
+      }
+
+      // Save all updates to backend
+      try {
+        await Promise.all(updatePromises);
+      } catch (error) {
+        console.error("Failed to save operation moves:", error);
+        // TODO: Show error message to user and potentially revert changes
+      }
+    }, 300); // Wait 300ms after user stops dragging before saving
   };
 
   const handleItemResize = async (
@@ -269,31 +304,54 @@ export default function TimelineGrid() {
     }
   };
 
-  const handleItemSelect = (itemId: string | number) => {
-    // Just handle delete functionality for keyboard, no auto-edit
+  const handleItemSelect = (itemId: string | number, e?: any) => {
+    // Handle multi-select with CMD/Ctrl key
+    if (e && (e.metaKey || e.ctrlKey)) {
+      setSelectedItems(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(itemId)) {
+          newSet.delete(itemId);
+        } else {
+          newSet.add(itemId);
+        }
+        return newSet;
+      });
+    } else {
+      // Single select - clear others and select this one
+      setSelectedItems(new Set([itemId]));
+    }
+
+    // Handle delete functionality for keyboard
     const handleDelete = async (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") {
-        // Find and delete the operation directly
-        const operationToDelete = operations.find(
-          (op) => op.id === String(itemId)
-        );
-        if (operationToDelete) {
-          try {
-            await dataProvider.deleteOperation(operationToDelete.id);
+        // Delete all selected items
+        const itemsToDelete = Array.from(selectedItems);
+        
+        for (const selectedItemId of itemsToDelete) {
+          const operationToDelete = operations.find(
+            (op) => op.id === String(selectedItemId)
+          );
+          if (operationToDelete) {
+            try {
+              await dataProvider.deleteOperation(operationToDelete.id);
 
-            // Remove from operations state
-            setOperations((prev) =>
-              prev.filter((op) => op.id !== operationToDelete.id)
-            );
+              // Remove from operations state
+              setOperations((prev) =>
+                prev.filter((op) => op.id !== operationToDelete.id)
+              );
 
-            // Remove from timeline items
-            setItems((prev) =>
-              prev.filter((item) => item.id !== operationToDelete.id)
-            );
-          } catch (error) {
-            console.error("Failed to delete operation:", error);
+              // Remove from timeline items
+              setItems((prev) =>
+                prev.filter((item) => item.id !== operationToDelete.id)
+              );
+            } catch (error) {
+              console.error("Failed to delete operation:", error);
+            }
           }
         }
+        
+        // Clear selection after deletion
+        setSelectedItems(new Set());
         window.removeEventListener("keydown", handleDelete);
       }
     };
@@ -537,26 +595,45 @@ export default function TimelineGrid() {
           batches={batches}
         />
 
-        <Timeline
-          groups={groups}
-          items={items}
-          visibleTimeStart={visibleTimeStart}
-          visibleTimeEnd={visibleTimeEnd}
-          onTimeChange={handleTimeChange}
-          canMove={true}
-          canResize="both"
-          canChangeGroup={true}
-          onItemMove={handleItemMove}
-          onItemResize={handleItemResize}
-          onItemSelect={handleItemSelect}
-          stackItems={true}
-          dragSnap={30 * 60 * 1000}
-          lineHeight={40}
+        <div 
+          className="timeline-grid"
+          onClick={(e) => {
+            // Clear selection when clicking on empty space (not on items)
+            if (e.target === e.currentTarget || (e.target as Element).closest('.rct-item') === null) {
+              if (!e.metaKey && !e.ctrlKey) {
+                setSelectedItems(new Set());
+              }
+            }
+          }}
+        >
+          <Timeline
+            groups={groups}
+            items={items}
+            visibleTimeStart={visibleTimeStart}
+            visibleTimeEnd={visibleTimeEnd}
+            onTimeChange={handleTimeChange}
+            canMove={true}
+            canResize="both"
+            canChangeGroup={false}
+            onItemMove={handleItemMove}
+            onItemResize={handleItemResize}
+            onItemSelect={handleItemSelect}
+            stackItems={true}
+            dragSnap={30 * 60 * 1000}
+            lineHeight={40}
           itemRenderer={({ item, getItemProps, getResizeProps }) => {
             const { left: leftResizeProps, right: rightResizeProps } =
               getResizeProps();
+            const isSelected = selectedItems.has(item.id);
+            
             const itemProps = getItemProps({
-              onDoubleClick: () => handleEditOperation(String(item.id)),
+              onClick: (e: React.MouseEvent) => {
+                handleItemSelect(item.id, e);
+              },
+              onDoubleClick: (e: React.MouseEvent) => {
+                e.stopPropagation();
+                handleEditOperation(String(item.id));
+              },
               onContextMenu: (e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -571,11 +648,15 @@ export default function TimelineGrid() {
                 ...item.itemProps?.style,
                 cursor: "pointer",
                 userSelect: "none",
+                border: isSelected ? "2px solid #0078d4" : "none",
+                boxShadow: isSelected 
+                  ? "0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15)" 
+                  : item.itemProps?.style?.boxShadow || "0 1px 2px rgba(0, 0, 0, 0.1)",
               },
             });
 
             return (
-              <div {...itemProps}>
+              <div {...itemProps} data-selected={isSelected}>
                 <div {...leftResizeProps} />
                 <div
                   style={{
@@ -686,6 +767,7 @@ export default function TimelineGrid() {
             </TodayMarker>
           </TimelineMarkers>
         </Timeline>
+        </div>
       </div>
 
       {/* Context Menu */}

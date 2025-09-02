@@ -127,3 +127,28 @@
   border: 2px solid #0078d4;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
+
+/* Multi-select styling */
+.timeline-grid .rct-item[data-selected="true"] {
+  border: 2px solid #0078d4 !important;
+  box-shadow: 0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  z-index: 10;
+}
+
+/* Enhanced styling for selected items during drag */
+.timeline-grid .rct-item[data-selected="true"]:hover {
+  box-shadow: 0 0 0 2px #0078d4, 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Make sure multi-selected items stay visually connected */
+.timeline-grid .rct-item[data-selected="true"]::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 1px dashed #0078d4;
+  pointer-events: none;
+  opacity: 0.6;
+}
