@@ -456,6 +456,7 @@ export default function TimelineGrid() {
           onItemSelect={handleItemSelect}
           stackItems={true}
           dragSnap={30 * 60 * 1000}
+          lineHeight={40}
           itemRenderer={({ item, getItemProps, getResizeProps }) => {
             const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
             const itemProps = getItemProps({
