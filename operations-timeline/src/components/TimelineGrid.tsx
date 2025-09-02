@@ -150,7 +150,7 @@ export default function TimelineGrid() {
     setEndDate(new Date(visibleTimeEnd));
   };
 
-  const handleItemMove = (
+  const handleItemMove = async (
     itemId: string | number,
     dragTime: number,
     newGroupOrder: number
@@ -159,25 +159,72 @@ export default function TimelineGrid() {
     if (!item) return;
 
     const difference = dragTime - item.start_time;
+    const newStartTime = new Date(dragTime);
+    const newEndTime = new Date(item.end_time + difference);
+    const newEquipmentId = groups[newGroupOrder].id;
+
+    // Update local state immediately for smooth UI
     const newItems = items.map((item) => {
       if (item.id === itemId) {
         return {
           ...item,
           start_time: dragTime,
           end_time: item.end_time + difference,
-          group: groups[newGroupOrder].id,
+          group: newEquipmentId,
         };
       }
       return item;
     });
     setItems(newItems);
+
+    // Update operations state
+    setOperations((prev) =>
+      prev.map((op) => {
+        if (op.id === itemId) {
+          return {
+            ...op,
+            startTime: newStartTime,
+            endTime: newEndTime,
+            equipmentId: newEquipmentId,
+            modifiedOn: new Date(),
+          };
+        }
+        return op;
+      })
+    );
+
+    // Save to backend
+    try {
+      const operationToUpdate = operations.find((op) => op.id === itemId);
+      if (operationToUpdate) {
+        await dataProvider.saveOperation({
+          ...operationToUpdate,
+          startTime: newStartTime,
+          endTime: newEndTime,
+          equipmentId: newEquipmentId,
+          modifiedOn: new Date(),
+        });
+      }
+    } catch (error) {
+      console.error("Failed to save operation move:", error);
+      // TODO: Show error message to user and potentially revert changes
+    }
   };
 
-  const handleItemResize = (
+  const handleItemResize = async (
     itemId: string | number,
     time: number,
     edge: string
   ) => {
+    const item = items.find((item) => item.id === itemId);
+    if (!item) return;
+
+    const newStartTime =
+      edge === "left" ? new Date(time) : new Date(item.start_time);
+    const newEndTime =
+      edge === "left" ? new Date(item.end_time) : new Date(time);
+
+    // Update local state immediately for smooth UI
     const newItems = items.map((item) => {
       if (item.id === itemId) {
         return {
@@ -189,6 +236,37 @@ export default function TimelineGrid() {
       return item;
     });
     setItems(newItems);
+
+    // Update operations state
+    setOperations((prev) =>
+      prev.map((op) => {
+        if (op.id === itemId) {
+          return {
+            ...op,
+            startTime: newStartTime,
+            endTime: newEndTime,
+            modifiedOn: new Date(),
+          };
+        }
+        return op;
+      })
+    );
+
+    // Save to backend
+    try {
+      const operationToUpdate = operations.find((op) => op.id === itemId);
+      if (operationToUpdate) {
+        await dataProvider.saveOperation({
+          ...operationToUpdate,
+          startTime: newStartTime,
+          endTime: newEndTime,
+          modifiedOn: new Date(),
+        });
+      }
+    } catch (error) {
+      console.error("Failed to save operation resize:", error);
+      // TODO: Show error message to user and potentially revert changes
+    }
   };
 
   const handleItemSelect = (itemId: string | number) => {
