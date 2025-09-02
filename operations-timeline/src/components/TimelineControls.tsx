@@ -1,32 +1,83 @@
-// React JSX runtime is used implicitly
+import { 
+  Button,
+  Toolbar,
+  ToolbarDivider,
+  Dropdown,
+  Option,
+  makeStyles,
+  tokens
+} from "@fluentui/react-components";
+import { 
+  CalendarLtr24Regular, 
+  Add24Regular
+} from "@fluentui/react-icons";
 import { ZoomLevel } from "../hooks/useViewport";
 
 interface Props {
   zoom: ZoomLevel;
   setZoom: (z: ZoomLevel) => void;
   onJumpToNow: () => void;
+  onAddEquipment: () => void;
 }
+
+const useStyles = makeStyles({
+  toolbar: {
+    backgroundColor: tokens.colorNeutralBackground1,
+    borderRadius: tokens.borderRadiusMedium,
+    boxShadow: tokens.shadow4,
+    padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
+  },
+});
 
 export default function TimelineControls({
   zoom,
   setZoom,
   onJumpToNow,
+  onAddEquipment,
 }: Props) {
+  const styles = useStyles();
+
+  const zoomOptions = [
+    { key: "hour", text: "Hour View" },
+    { key: "day", text: "Day View" },
+    { key: "week", text: "Week View" },
+    { key: "year", text: "Year View" },
+  ];
+
   return (
-    <div
-      style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}
-    >
-      <label>Zoom:</label>
-      <select
-        value={zoom}
-        onChange={(e) => setZoom(e.target.value as ZoomLevel)}
+    <Toolbar className={styles.toolbar} size="small">
+      <Dropdown
+        aria-labelledby="zoom-label"
+        placeholder="Select zoom level"
+        value={zoomOptions.find(option => option.key === zoom)?.text}
+        onOptionSelect={(_, data) => setZoom(data.optionValue as ZoomLevel)}
       >
-        <option value="hour">Hour</option>
-        <option value="day">Day</option>
-        <option value="week">Week</option>
-        <option value="year">Year</option>
-      </select>
-      <button onClick={onJumpToNow}>Jump to now</button>
-    </div>
+        {zoomOptions.map((option) => (
+          <Option key={option.key} value={option.key}>
+            {option.text}
+          </Option>
+        ))}
+      </Dropdown>
+      
+      <ToolbarDivider />
+      
+      <Button
+        appearance="subtle"
+        icon={<CalendarLtr24Regular />}
+        onClick={onJumpToNow}
+      >
+        Jump to Now
+      </Button>
+      
+      <ToolbarDivider />
+      
+      <Button
+        appearance="primary"
+        icon={<Add24Regular />}
+        onClick={onAddEquipment}
+      >
+        Add Equipment
+      </Button>
+    </Toolbar>
   );
 }

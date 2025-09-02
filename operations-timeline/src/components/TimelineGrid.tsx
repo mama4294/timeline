@@ -12,7 +12,6 @@ import moment from "moment";
 import { useViewport } from "../hooks/useViewport";
 import TimelineControls from "./TimelineControls";
 import { dataProvider } from "../services/dataProvider";
-import { Button } from "@fluentui/react-components";
 import { EquipmentDialog } from "./EquipmentDialog";
 import type { Equipment } from "../models/types";
 // types are available in models if needed
@@ -229,22 +228,12 @@ export default function TimelineGrid() {
           overflow: "hidden", // Contains the timeline's scroll
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <TimelineControls
-            zoom={zoom}
-            setZoom={setZoom}
-            onJumpToNow={jumpToNow}
-          />
-          <Button appearance="primary" onClick={handleNewEquipment}>
-            Add Equipment
-          </Button>
-        </div>
+        <TimelineControls
+          zoom={zoom}
+          setZoom={setZoom}
+          onJumpToNow={jumpToNow}
+          onAddEquipment={handleNewEquipment}
+        />
 
         <EquipmentDialog
           equipment={selectedEquipment}
