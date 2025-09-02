@@ -34,10 +34,12 @@ export default function TimelineGrid() {
   const [selectedEquipment, setSelectedEquipment] = useState<
     Equipment | undefined
   >();
-  
+
   // Operation dialog state
   const [isOperationDialogOpen, setIsOperationDialogOpen] = useState(false);
-  const [selectedOperation, setSelectedOperation] = useState<Operation | undefined>();
+  const [selectedOperation, setSelectedOperation] = useState<
+    Operation | undefined
+  >();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -57,9 +59,9 @@ export default function TimelineGrid() {
 
   // Helper function to create timeline items from operations
   const createTimelineItem = (operation: Operation) => {
-    const batch = batches.find(b => b.id === operation.batchId);
+    const batch = batches.find((b) => b.id === operation.batchId);
     const bgColor = batch ? batch.color : "#ccc";
-    
+
     return {
       id: operation.id,
       group: operation.equipmentId,
@@ -194,16 +196,22 @@ export default function TimelineGrid() {
     const handleDelete = async (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") {
         // Find and delete the operation directly
-        const operationToDelete = operations.find(op => op.id === String(itemId));
+        const operationToDelete = operations.find(
+          (op) => op.id === String(itemId)
+        );
         if (operationToDelete) {
           try {
             await dataProvider.deleteOperation(operationToDelete.id);
-            
+
             // Remove from operations state
-            setOperations(prev => prev.filter(op => op.id !== operationToDelete.id));
-            
+            setOperations((prev) =>
+              prev.filter((op) => op.id !== operationToDelete.id)
+            );
+
             // Remove from timeline items
-            setItems(prev => prev.filter(item => item.id !== operationToDelete.id));
+            setItems((prev) =>
+              prev.filter((item) => item.id !== operationToDelete.id)
+            );
           } catch (error) {
             console.error("Failed to delete operation:", error);
           }
@@ -272,11 +280,11 @@ export default function TimelineGrid() {
 
   const handleEditOperation = (operationId: string) => {
     // Find the operation in the operations state first, then items if needed
-    let operation = operations.find(op => op.id === operationId);
-    
+    let operation = operations.find((op) => op.id === operationId);
+
     if (!operation) {
       // Fall back to converting from timeline item
-      const item = items.find(item => item.id === operationId);
+      const item = items.find((item) => item.id === operationId);
       if (item) {
         operation = {
           id: item.id,
@@ -291,7 +299,7 @@ export default function TimelineGrid() {
         };
       }
     }
-    
+
     if (operation) {
       setSelectedOperation(operation);
       setIsOperationDialogOpen(true);
@@ -301,22 +309,26 @@ export default function TimelineGrid() {
   const handleSaveOperation = async (operation: Partial<Operation>) => {
     try {
       const saved = await dataProvider.saveOperation(operation);
-      
-      // Update operations state  
+
+      // Update operations state
       if (operation.id) {
-        setOperations(prev => prev.map(op => op.id === operation.id ? saved : op));
-        
+        setOperations((prev) =>
+          prev.map((op) => (op.id === operation.id ? saved : op))
+        );
+
         // Update timeline items
         const timelineItem = createTimelineItem(saved);
-        setItems(prev => prev.map(item => item.id === operation.id ? timelineItem : item));
+        setItems((prev) =>
+          prev.map((item) => (item.id === operation.id ? timelineItem : item))
+        );
       } else {
-        setOperations(prev => [...prev, saved]);
-        
+        setOperations((prev) => [...prev, saved]);
+
         // Add new timeline item
         const timelineItem = createTimelineItem(saved);
-        setItems(prev => [...prev, timelineItem]);
+        setItems((prev) => [...prev, timelineItem]);
       }
-      
+
       setIsOperationDialogOpen(false);
       setSelectedOperation(undefined);
     } catch (error) {
@@ -329,13 +341,17 @@ export default function TimelineGrid() {
     if (selectedOperation) {
       try {
         await dataProvider.deleteOperation(selectedOperation.id);
-        
+
         // Remove from operations state
-        setOperations(prev => prev.filter(op => op.id !== selectedOperation.id));
-        
+        setOperations((prev) =>
+          prev.filter((op) => op.id !== selectedOperation.id)
+        );
+
         // Remove from timeline items
-        setItems(prev => prev.filter(item => item.id !== selectedOperation.id));
-        
+        setItems((prev) =>
+          prev.filter((item) => item.id !== selectedOperation.id)
+        );
+
         setIsOperationDialogOpen(false);
         setSelectedOperation(undefined);
       } catch (error) {
@@ -349,18 +365,19 @@ export default function TimelineGrid() {
   const handleContextMenuEdit = () => {
     if (contextMenu.operationId) {
       handleEditOperation(contextMenu.operationId);
-      setContextMenu(prev => ({ ...prev, visible: false }));
+      setContextMenu((prev) => ({ ...prev, visible: false }));
     }
   };
 
   const handleContextMenuDelete = () => {
     if (contextMenu.operationId) {
       // Find the operation and set it as selected, then delete
-      const operation = operations.find(op => op.id === contextMenu.operationId) ||
-        items.find(item => item.id === contextMenu.operationId);
-      
+      const operation =
+        operations.find((op) => op.id === contextMenu.operationId) ||
+        items.find((item) => item.id === contextMenu.operationId);
+
       if (operation) {
-        if ('equipmentId' in operation) {
+        if ("equipmentId" in operation) {
           // It's already an Operation object
           setSelectedOperation(operation);
         } else {
@@ -378,17 +395,17 @@ export default function TimelineGrid() {
           };
           setSelectedOperation(operationData);
         }
-        
+
         // Call delete handler
         handleDeleteOperation();
       }
-      
-      setContextMenu(prev => ({ ...prev, visible: false }));
+
+      setContextMenu((prev) => ({ ...prev, visible: false }));
     }
   };
 
   const handleContextMenuClose = () => {
-    setContextMenu(prev => ({ ...prev, visible: false }));
+    setContextMenu((prev) => ({ ...prev, visible: false }));
   };
 
   return (
@@ -458,7 +475,8 @@ export default function TimelineGrid() {
           dragSnap={30 * 60 * 1000}
           lineHeight={40}
           itemRenderer={({ item, getItemProps, getResizeProps }) => {
-            const { left: leftResizeProps, right: rightResizeProps } = getResizeProps();
+            const { left: leftResizeProps, right: rightResizeProps } =
+              getResizeProps();
             const itemProps = getItemProps({
               onDoubleClick: () => handleEditOperation(String(item.id)),
               onContextMenu: (e: React.MouseEvent) => {
@@ -473,9 +491,9 @@ export default function TimelineGrid() {
               },
               style: {
                 ...item.itemProps?.style,
-                cursor: 'pointer',
-                userSelect: 'none',
-              }
+                cursor: "pointer",
+                userSelect: "none",
+              },
             });
 
             return (
@@ -483,23 +501,23 @@ export default function TimelineGrid() {
                 <div {...leftResizeProps} />
                 <div
                   style={{
-                    height: '100%',
-                    position: 'relative',
+                    height: "100%",
+                    position: "relative",
                     paddingLeft: 4,
                     paddingRight: 4,
-                    display: 'flex',
-                    alignItems: 'center',
-                    overflow: 'hidden',
+                    display: "flex",
+                    alignItems: "center",
+                    overflow: "hidden",
                   }}
                 >
                   <div
                     style={{
-                      fontSize: '12px',
-                      color: 'white',
-                      fontWeight: '500',
-                      textOverflow: 'ellipsis',
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
+                      fontSize: "12px",
+                      color: "white",
+                      fontWeight: "500",
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {item.title}

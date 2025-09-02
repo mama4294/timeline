@@ -105,10 +105,10 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
 
   const formatDateTimeLocal = (date: Date): string => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
@@ -129,13 +129,20 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
             <Field label="Equipment" required>
               <Dropdown
                 placeholder="Select equipment"
-                value={equipment.find(eq => eq.id === formData.equipmentId)?.description || ""}
-                onOptionSelect={(_, data) => 
+                value={
+                  equipment.find((eq) => eq.id === formData.equipmentId)
+                    ?.description || ""
+                }
+                onOptionSelect={(_, data) =>
                   handleChange("equipmentId", data.optionValue)
                 }
               >
                 {equipment.map((eq) => (
-                  <Option key={eq.id} value={eq.id} text={`${eq.description} (${eq.tag})`}>
+                  <Option
+                    key={eq.id}
+                    value={eq.id}
+                    text={`${eq.description} (${eq.tag})`}
+                  >
                     {eq.description} ({eq.tag})
                   </Option>
                 ))}
@@ -145,12 +152,20 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
             <Field label="Batch">
               <Dropdown
                 placeholder="Select batch (optional)"
-                value={batches.find(batch => batch.id === formData.batchId)?.id || ""}
-                onOptionSelect={(_, data) => 
-                  handleChange("batchId", data.optionValue === "" ? null : data.optionValue)
+                value={
+                  batches.find((batch) => batch.id === formData.batchId)?.id ||
+                  ""
+                }
+                onOptionSelect={(_, data) =>
+                  handleChange(
+                    "batchId",
+                    data.optionValue === "" ? null : data.optionValue
+                  )
                 }
               >
-                <Option value="" text="No Batch">No Batch</Option>
+                <Option value="" text="No Batch">
+                  No Batch
+                </Option>
                 {batches.map((batch) => (
                   <Option key={batch.id} value={batch.id} text={batch.id}>
                     {batch.id}
@@ -162,8 +177,12 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
             <Field label="Start Time" required>
               <Input
                 type="datetime-local"
-                value={formData.startTime ? formatDateTimeLocal(formData.startTime) : ""}
-                onChange={(e) => 
+                value={
+                  formData.startTime
+                    ? formatDateTimeLocal(formData.startTime)
+                    : ""
+                }
+                onChange={(e) =>
                   handleChange("startTime", parseDateTime(e.target.value))
                 }
               />
@@ -172,8 +191,10 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
             <Field label="End Time" required>
               <Input
                 type="datetime-local"
-                value={formData.endTime ? formatDateTimeLocal(formData.endTime) : ""}
-                onChange={(e) => 
+                value={
+                  formData.endTime ? formatDateTimeLocal(formData.endTime) : ""
+                }
+                onChange={(e) =>
                   handleChange("endTime", parseDateTime(e.target.value))
                 }
               />
@@ -183,12 +204,22 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               <Dropdown
                 placeholder="Select operation type"
                 value={formData.type || ""}
-                onOptionSelect={(_, data) => handleChange("type", data.optionValue)}
+                onOptionSelect={(_, data) =>
+                  handleChange("type", data.optionValue)
+                }
               >
-                <Option value="Production" text="Production">Production</Option>
-                <Option value="Maintenance" text="Maintenance">Maintenance</Option>
-                <Option value="Cleaning" text="Cleaning">Cleaning</Option>
-                <Option value="Inspection" text="Inspection">Inspection</Option>
+                <Option value="Production" text="Production">
+                  Production
+                </Option>
+                <Option value="Maintenance" text="Maintenance">
+                  Maintenance
+                </Option>
+                <Option value="Cleaning" text="Cleaning">
+                  Cleaning
+                </Option>
+                <Option value="Inspection" text="Inspection">
+                  Inspection
+                </Option>
               </Dropdown>
             </Field>
 

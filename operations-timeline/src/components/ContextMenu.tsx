@@ -1,8 +1,5 @@
 import React, { useEffect } from "react";
-import {
-  Edit24Regular,
-  Delete24Regular,
-} from "@fluentui/react-icons";
+import { Edit24Regular, Delete24Regular } from "@fluentui/react-icons";
 
 interface ContextMenuProps {
   visible: boolean;
@@ -66,7 +63,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         }}
         onClick={onEdit}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--colorNeutralBackground1Hover)";
+          e.currentTarget.style.backgroundColor =
+            "var(--colorNeutralBackground1Hover)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = "transparent";
@@ -93,7 +91,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         }}
         onClick={onDelete}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--colorNeutralBackground1Hover)";
+          e.currentTarget.style.backgroundColor =
+            "var(--colorNeutralBackground1Hover)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = "transparent";

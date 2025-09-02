@@ -1,16 +1,13 @@
-import { 
+import {
   Button,
   Toolbar,
   ToolbarDivider,
   Dropdown,
   Option,
   makeStyles,
-  tokens
+  tokens,
 } from "@fluentui/react-components";
-import { 
-  CalendarLtr24Regular, 
-  Add24Regular
-} from "@fluentui/react-icons";
+import { CalendarLtr24Regular, Add24Regular } from "@fluentui/react-icons";
 import { ZoomLevel } from "../hooks/useViewport";
 
 interface Props {
@@ -51,7 +48,7 @@ export default function TimelineControls({
       <Dropdown
         aria-labelledby="zoom-label"
         placeholder="Select zoom level"
-        value={zoomOptions.find(option => option.key === zoom)?.text}
+        value={zoomOptions.find((option) => option.key === zoom)?.text}
         onOptionSelect={(_, data) => setZoom(data.optionValue as ZoomLevel)}
       >
         {zoomOptions.map((option) => (
@@ -60,9 +57,9 @@ export default function TimelineControls({
           </Option>
         ))}
       </Dropdown>
-      
+
       <ToolbarDivider />
-      
+
       <Button
         appearance="subtle"
         icon={<CalendarLtr24Regular />}
@@ -70,9 +67,9 @@ export default function TimelineControls({
       >
         Jump to Now
       </Button>
-      
+
       <ToolbarDivider />
-      
+
       <Button
         appearance="primary"
         icon={<Add24Regular />}
@@ -80,7 +77,7 @@ export default function TimelineControls({
       >
         Add Equipment
       </Button>
-      
+
       <Button
         appearance="outline"
         icon={<Add24Regular />}

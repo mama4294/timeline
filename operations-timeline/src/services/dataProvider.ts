@@ -322,7 +322,9 @@ class MockDataProvider implements IDataProvider {
       return updated;
     } else {
       // Create new operation
-      const newId = String(Math.max(...this.operations.map(op => parseInt(op.id))) + 1);
+      const newId = String(
+        Math.max(...this.operations.map((op) => parseInt(op.id))) + 1
+      );
       const newOperation: Operation = {
         id: newId,
         equipmentId: operation.equipmentId || "",
