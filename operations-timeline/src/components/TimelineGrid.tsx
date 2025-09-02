@@ -45,7 +45,9 @@ export default function TimelineGrid() {
   const [operations, setOperations] = useState<Operation[]>([]);
 
   // Multi-select state
-  const [selectedItems, setSelectedItems] = useState<Set<string | number>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<Set<string | number>>(
+    new Set()
+  );
 
   // Ref for debouncing drag saves
   const dragSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -165,8 +167,8 @@ export default function TimelineGrid() {
     if (!item) return;
 
     // Determine which items to move - if the dragged item is selected, move all selected items
-    const itemsToMove = selectedItems.has(itemId) 
-      ? Array.from(selectedItems) 
+    const itemsToMove = selectedItems.has(itemId)
+      ? Array.from(selectedItems)
       : [itemId];
 
     const difference = dragTime - item.start_time;
@@ -184,7 +186,7 @@ export default function TimelineGrid() {
       }
       return currentItem;
     });
-    
+
     // Set items immediately to show all selected items moving in real-time
     setItems(newItems);
 
@@ -195,11 +197,11 @@ export default function TimelineGrid() {
     dragSaveTimeoutRef.current = setTimeout(async () => {
       // Update operations state and save to backend
       const updatePromises = [];
-      
+
       for (const moveItemId of itemsToMove) {
-        const originalItem = items.find(i => i.id === moveItemId);
+        const originalItem = items.find((i) => i.id === moveItemId);
         if (!originalItem) continue;
-        
+
         const newStartTime = new Date(originalItem.start_time + difference);
         const newEndTime = new Date(originalItem.end_time + difference);
 
@@ -307,7 +309,7 @@ export default function TimelineGrid() {
   const handleItemSelect = (itemId: string | number, e?: any) => {
     // Handle multi-select with CMD/Ctrl key
     if (e && (e.metaKey || e.ctrlKey)) {
-      setSelectedItems(prev => {
+      setSelectedItems((prev) => {
         const newSet = new Set(prev);
         if (newSet.has(itemId)) {
           newSet.delete(itemId);
@@ -326,7 +328,7 @@ export default function TimelineGrid() {
       if (e.key === "Delete" || e.key === "Backspace") {
         // Delete all selected items
         const itemsToDelete = Array.from(selectedItems);
-        
+
         for (const selectedItemId of itemsToDelete) {
           const operationToDelete = operations.find(
             (op) => op.id === String(selectedItemId)
@@ -349,7 +351,7 @@ export default function TimelineGrid() {
             }
           }
         }
-        
+
         // Clear selection after deletion
         setSelectedItems(new Set());
         window.removeEventListener("keydown", handleDelete);
@@ -595,11 +597,14 @@ export default function TimelineGrid() {
           batches={batches}
         />
 
-        <div 
+        <div
           className="timeline-grid"
           onClick={(e) => {
             // Clear selection when clicking on empty space (not on items)
-            if (e.target === e.currentTarget || (e.target as Element).closest('.rct-item') === null) {
+            if (
+              e.target === e.currentTarget ||
+              (e.target as Element).closest(".rct-item") === null
+            ) {
               if (!e.metaKey && !e.ctrlKey) {
                 setSelectedItems(new Set());
               }
@@ -613,7 +618,7 @@ export default function TimelineGrid() {
             visibleTimeEnd={visibleTimeEnd}
             onTimeChange={handleTimeChange}
             canMove={true}
-            canResize="both"
+            canResize={selectedItems.size <= 1 ? "both" : false}
             canChangeGroup={false}
             onItemMove={handleItemMove}
             onItemResize={handleItemResize}
@@ -621,152 +626,154 @@ export default function TimelineGrid() {
             stackItems={true}
             dragSnap={30 * 60 * 1000}
             lineHeight={40}
-          itemRenderer={({ item, getItemProps, getResizeProps }) => {
-            const { left: leftResizeProps, right: rightResizeProps } =
-              getResizeProps();
-            const isSelected = selectedItems.has(item.id);
-            
-            const itemProps = getItemProps({
-              onClick: (e: React.MouseEvent) => {
-                handleItemSelect(item.id, e);
-              },
-              onDoubleClick: (e: React.MouseEvent) => {
-                e.stopPropagation();
-                handleEditOperation(String(item.id));
-              },
-              onContextMenu: (e: React.MouseEvent) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setContextMenu({
-                  visible: true,
-                  x: e.clientX,
-                  y: e.clientY,
-                  operationId: String(item.id),
-                });
-              },
-              style: {
-                ...item.itemProps?.style,
-                cursor: "pointer",
-                userSelect: "none",
-                border: isSelected ? "2px solid #0078d4" : "none",
-                boxShadow: isSelected 
-                  ? "0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15)" 
-                  : item.itemProps?.style?.boxShadow || "0 1px 2px rgba(0, 0, 0, 0.1)",
-              },
-            });
+            itemRenderer={({ item, getItemProps, getResizeProps }) => {
+              const { left: leftResizeProps, right: rightResizeProps } =
+                getResizeProps();
+              const isSelected = selectedItems.has(item.id);
+              const canResize = selectedItems.size <= 1;
 
-            return (
-              <div {...itemProps} data-selected={isSelected}>
-                <div {...leftResizeProps} />
-                <div
-                  style={{
-                    height: "100%",
-                    position: "relative",
-                    paddingLeft: 4,
-                    paddingRight: 4,
-                    display: "flex",
-                    alignItems: "center",
-                    overflow: "hidden",
-                  }}
-                >
+              const itemProps = getItemProps({
+                onClick: (e: React.MouseEvent) => {
+                  handleItemSelect(item.id, e);
+                },
+                onDoubleClick: (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  handleEditOperation(String(item.id));
+                },
+                onContextMenu: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setContextMenu({
+                    visible: true,
+                    x: e.clientX,
+                    y: e.clientY,
+                    operationId: String(item.id),
+                  });
+                },
+                style: {
+                  ...item.itemProps?.style,
+                  cursor: canResize ? "pointer" : "move",
+                  userSelect: "none",
+                  border: isSelected ? "2px solid #0078d4" : "none",
+                  boxShadow: isSelected
+                    ? "0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15)"
+                    : item.itemProps?.style?.boxShadow ||
+                      "0 1px 2px rgba(0, 0, 0, 0.1)",
+                },
+              });
+
+              return (
+                <div {...itemProps} data-selected={isSelected}>
+                  {canResize && <div {...leftResizeProps} />}
                   <div
                     style={{
-                      fontSize: "12px",
-                      color: "white",
-                      fontWeight: "500",
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {item.title}
-                  </div>
-                </div>
-                <div {...rightResizeProps} />
-              </div>
-            );
-          }}
-          className="timeline-grid"
-          style={{
-            backgroundColor: "white",
-            borderRadius: "2px",
-          }}
-          sidebarWidth={180}
-          rightSidebarWidth={0}
-          groupRenderer={({ group }) => (
-            <div
-              style={{
-                cursor: "pointer",
-                padding: "4px 8px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                height: "100%",
-              }}
-              onClick={() => handleEditEquipment(group.id)}
-            >
-              <div
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "0.9em",
-                  lineHeight: "1.2",
-                }}
-              >
-                {group.title}
-              </div>
-              <div
-                style={{
-                  fontSize: "0.75em",
-                  color: "#666",
-                  lineHeight: "1.2",
-                }}
-              >
-                {group.rightTitle}
-              </div>
-            </div>
-          )}
-        >
-          <TimelineHeaders>
-            <SidebarHeader>
-              {({ getRootProps }) => {
-                return (
-                  <div
-                    {...getRootProps()}
-                    style={{
-                      backgroundColor: "#f8f8f8",
-                      padding: "8px 10px",
-                      fontWeight: "bold",
-                      borderBottom: "1px solid #e0e0e0",
-                      color: "#323130",
-                      width: "180px",
-                      boxSizing: "border-box",
                       height: "100%",
+                      position: "relative",
+                      paddingLeft: 4,
+                      paddingRight: 4,
                       display: "flex",
                       alignItems: "center",
+                      overflow: "hidden",
                     }}
                   >
-                    Equipment
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "white",
+                        fontWeight: "500",
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {item.title}
+                    </div>
                   </div>
-                );
-              }}
-            </SidebarHeader>
-            <DateHeader unit="primaryHeader" />
-            <DateHeader />
-          </TimelineHeaders>
-          <TimelineMarkers>
-            <TodayMarker>
-              {({ styles }) => (
+                  {canResize && <div {...rightResizeProps} />}
+                </div>
+              );
+            }}
+            className="timeline-grid"
+            style={{
+              backgroundColor: "white",
+              borderRadius: "2px",
+            }}
+            sidebarWidth={180}
+            rightSidebarWidth={0}
+            groupRenderer={({ group }) => (
+              <div
+                style={{
+                  cursor: "pointer",
+                  padding: "4px 8px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  height: "100%",
+                }}
+                onClick={() => handleEditEquipment(group.id)}
+              >
                 <div
                   style={{
-                    ...styles,
-                    backgroundColor: "#e4002b", // Fluid UI red
-                    width: "2px",
+                    fontWeight: "bold",
+                    fontSize: "0.9em",
+                    lineHeight: "1.2",
                   }}
-                />
-              )}
-            </TodayMarker>
-          </TimelineMarkers>
-        </Timeline>
+                >
+                  {group.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.75em",
+                    color: "#666",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {group.rightTitle}
+                </div>
+              </div>
+            )}
+          >
+            <TimelineHeaders>
+              <SidebarHeader>
+                {({ getRootProps }) => {
+                  return (
+                    <div
+                      {...getRootProps()}
+                      style={{
+                        backgroundColor: "#f8f8f8",
+                        padding: "8px 10px",
+                        fontWeight: "bold",
+                        borderBottom: "1px solid #e0e0e0",
+                        color: "#323130",
+                        width: "180px",
+                        boxSizing: "border-box",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      Equipment
+                    </div>
+                  );
+                }}
+              </SidebarHeader>
+              <DateHeader unit="primaryHeader" />
+              <DateHeader />
+            </TimelineHeaders>
+            <TimelineMarkers>
+              <TodayMarker>
+                {({ styles }) => (
+                  <div
+                    style={{
+                      ...styles,
+                      backgroundColor: "#e4002b", // Fluid UI red
+                      width: "2px",
+                    }}
+                  />
+                )}
+              </TodayMarker>
+            </TimelineMarkers>
+          </Timeline>
         </div>
       </div>
 

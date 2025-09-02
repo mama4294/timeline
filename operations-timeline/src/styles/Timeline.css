@@ -142,7 +142,7 @@
 
 /* Make sure multi-selected items stay visually connected */
 .timeline-grid .rct-item[data-selected="true"]::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -2px;
   left: -2px;
