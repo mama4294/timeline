@@ -90,7 +90,7 @@ export default function TimelineGrid() {
       id: operation.id,
       group: operation.equipmentId,
       title: operation.description,
-  type: operation.type,
+      type: operation.type,
       start_time: moment(operation.startTime).valueOf(),
       end_time: moment(operation.endTime).valueOf(),
       itemProps: {
@@ -171,24 +171,30 @@ export default function TimelineGrid() {
   const visibleTimeEnd = moment(endDate).valueOf();
 
   // Filter items by search term (batchId, equipment title/tag, or operation type)
-  const displayedItems = items.filter((it) => {
+  let displayedItems = items.filter((it) => {
     if (!searchTerm) return true;
     const s = searchTerm.toLowerCase();
-    const batchMatch = it.batchId && String(it.batchId).toLowerCase().includes(s);
+    const batchMatch =
+      it.batchId && String(it.batchId).toLowerCase().includes(s);
     const typeMatch = it.type && String(it.type).toLowerCase().includes(s);
     const titleMatch = it.title && String(it.title).toLowerCase().includes(s);
-    const descMatch = it.description && String(it.description).toLowerCase().includes(s);
+    const descMatch =
+      it.description && String(it.description).toLowerCase().includes(s);
     // find equipment
     const eq = equipment.find((e) => String(e.id) === String(it.group));
-    const equipmentMatch = eq && (
-      String(eq.description).toLowerCase().includes(s) ||
-      String(eq.tag || "").toLowerCase().includes(s)
+    const equipmentMatch =
+      eq &&
+      (String(eq.description).toLowerCase().includes(s) ||
+        String(eq.tag || "")
+          .toLowerCase()
+          .includes(s));
+    return Boolean(
+      batchMatch || typeMatch || equipmentMatch || titleMatch || descMatch
     );
-    return Boolean(batchMatch || typeMatch || equipmentMatch || titleMatch || descMatch);
   });
 
   // When in view mode, only display groups that have at least one displayed item visible in the current range
-  const displayedGroups = editMode
+  let displayedGroups = editMode
     ? groups
     : groups.filter((g) =>
         displayedItems.some((it) => {
@@ -199,6 +205,35 @@ export default function TimelineGrid() {
           return itemEnd >= visibleTimeStart && itemStart <= visibleTimeEnd;
         })
       );
+
+  // Inject placeholder if no items to display
+  if (displayedItems.length === 0) {
+    displayedGroups = [
+      {
+        id: "placeholder",
+        title: "No operations",
+        rightTitle: "",
+      },
+    ];
+    displayedItems = [
+      {
+        id: "placeholder-item",
+        group: "placeholder",
+        title: "No operations scheduled",
+        start_time: visibleTimeStart,
+        end_time: visibleTimeEnd,
+        itemProps: {
+          style: {
+            background: "#f3f2f1",
+            color: "#888",
+            fontStyle: "italic",
+            border: "none",
+            pointerEvents: "none",
+          },
+        },
+      },
+    ];
+  }
 
   const handleTimeChange = (
     visibleTimeStart: number,
@@ -211,7 +246,7 @@ export default function TimelineGrid() {
   const handleItemMove = async (
     itemId: string | number,
     dragTime: number,
-  _newGroupOrder: number
+    _newGroupOrder: number
   ) => {
     if (!editMode) return; // Prevent moves when not in edit mode
     const item = items.find((item) => item.id === itemId);
@@ -304,7 +339,7 @@ export default function TimelineGrid() {
     time: number,
     edge: string
   ) => {
-  if (!editMode) return; // Prevent resizing when not in edit mode
+    if (!editMode) return; // Prevent resizing when not in edit mode
     const item = items.find((item) => item.id === itemId);
     if (!item) return;
 
@@ -418,7 +453,7 @@ export default function TimelineGrid() {
   };
 
   const handleEditEquipment = async (groupId: string) => {
-  if (!editMode) return; // Editing equipment not allowed in view mode
+    if (!editMode) return; // Editing equipment not allowed in view mode
     console.log("Group ID clicked:", groupId);
     const allEquipment = await dataProvider.getEquipment();
     console.log("All equipment:", allEquipment);
@@ -431,9 +466,9 @@ export default function TimelineGrid() {
   };
 
   const handleNewEquipment = () => {
-  if (!editMode) return;
-  setSelectedEquipment(undefined);
-  setIsDialogOpen(true);
+    if (!editMode) return;
+    setSelectedEquipment(undefined);
+    setIsDialogOpen(true);
   };
 
   const refreshEquipment = async () => {
@@ -461,15 +496,15 @@ export default function TimelineGrid() {
 
   // Operation handlers
   const handleNewOperation = () => {
-  if (!editMode) return;
-  setSelectedOperation(undefined);
-  setIsOperationDialogOpen(true);
+    if (!editMode) return;
+    setSelectedOperation(undefined);
+    setIsOperationDialogOpen(true);
   };
 
   const handleEditOperation = (operationId: string) => {
-  if (!editMode) return; // Editing operations not allowed in view mode
+    if (!editMode) return; // Editing operations not allowed in view mode
 
-  // Find the operation in the operations state first, then items if needed
+    // Find the operation in the operations state first, then items if needed
     let operation = operations.find((op) => op.id === operationId);
 
     if (!operation) {
@@ -797,7 +832,9 @@ export default function TimelineGrid() {
           visibleTimeEnd={visibleTimeEnd}
           onTimeChange={handleTimeChange}
           canMove={editMode}
-          canResize={editMode ? (selectedItems.size <= 1 ? "both" : false) : false}
+          canResize={
+            editMode ? (selectedItems.size <= 1 ? "both" : false) : false
+          }
           canChangeGroup={false}
           onItemMove={handleItemMove}
           onItemResize={handleItemResize}
