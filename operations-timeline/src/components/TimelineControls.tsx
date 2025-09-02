@@ -102,7 +102,7 @@ export default function TimelineControls({
         placeholder=""
         aria-label="Search"
         value={searchTerm}
-        contentBefore={<Search24Regular />}
+        contentBefore={<Search24Regular style={{ width: 16, height: 16 }} />}
         onChange={(e) => setSearchTerm((e.target as HTMLInputElement).value)}
       />
 

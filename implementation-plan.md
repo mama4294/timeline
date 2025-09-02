@@ -270,5 +270,3 @@ class DataverseDataProvider implements IDataProvider { ... }
 2. Create mock data services
 3. Build basic Timeline component
 4. Implement equipment management
-
-Would you like me to proceed with any specific phase or make any adjustments to this plan?
