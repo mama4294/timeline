@@ -1,15 +1,16 @@
-import type { Operation, Batch } from "../models/types";
+import type { Operation } from "../models/types";
+import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
 import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 
 export interface IDataProvider {
   getEquipment(): Promise<cr2b6_equipments[]>;
   getOperations(startDate: Date, endDate: Date): Promise<Operation[]>;
-  getBatches(): Promise<Batch[]>;
+  getBatches(): Promise<cr2b6_batcheses[]>;
   saveEquipment(equipment: Partial<cr2b6_equipments>): Promise<cr2b6_equipments>;
   deleteEquipment(id: string): Promise<void>;
   saveOperation(operation: Partial<Operation>): Promise<Operation>;
   deleteOperation(id: string): Promise<void>;
-  saveBatch(batch: Partial<Batch>): Promise<Batch>;
+  saveBatch(batch: Partial<cr2b6_batcheses>): Promise<cr2b6_batcheses>;
   deleteBatch(id: string): Promise<void>;
 }
 
@@ -249,7 +250,7 @@ class MockDataProvider implements IDataProvider {
   ];
 
   // Use cr2b6_batcheses-compatible mock entries; use cr2b6_batchnumber as canonical id
-  private batches: Batch[] = [
+  private batches: cr2b6_batcheses[] = [
     {
       // primary id used by Dataverse
       cr2b6_batchesid: "25-HTS-30",
@@ -269,7 +270,7 @@ class MockDataProvider implements IDataProvider {
       owningbusinessunit: "",
   owningbusinessunitname: "Default BU",
       statecode: "0",
-  color: "#1f77b4",
+  
     },
     {
       cr2b6_batchesid: "25-HTS-31",
@@ -289,7 +290,7 @@ class MockDataProvider implements IDataProvider {
       owningbusinessunit: "",
       owningbusinessunitname: "Default BU",
       statecode: "0",
-  color: "#ff7f0e",
+  
     },
   ];
 
@@ -445,7 +446,7 @@ class MockDataProvider implements IDataProvider {
     return Promise.resolve(filteredOps);
   }
 
-  async getBatches(): Promise<Batch[]> {
+  async getBatches(): Promise<cr2b6_batcheses[]> {
     return Promise.resolve([...this.batches]);
   }
 
@@ -534,22 +535,21 @@ class MockDataProvider implements IDataProvider {
     this.operations.splice(index, 1);
   }
 
-  async saveBatch(batch: Partial<Batch>): Promise<Batch> {
+  async saveBatch(batch: Partial<cr2b6_batcheses>): Promise<cr2b6_batcheses> {
   const primaryId = batch.cr2b6_batchnumber || batch.cr2b6_batchesid;
   if (primaryId && this.batches.find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === primaryId)) {
       // Update existing batch
   const index = this.batches.findIndex((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === primaryId);
       if (index === -1) throw new Error("Batch not found");
 
-      const updated: Batch = {
+  const updated: cr2b6_batcheses = {
         ...this.batches[index],
         ...batch,
         // Ensure cr2b6_batchnumber is set and used as the canonical key
         cr2b6_batchesid: this.batches[index].cr2b6_batchesid || batch.cr2b6_batchesid,
         cr2b6_batchnumber: batch.cr2b6_batchnumber || this.batches[index].cr2b6_batchnumber || primaryId,
-        modifiedon: new Date(),
-        color: batch.color || this.batches[index].color,
-      } as Batch;
+  modifiedon: new Date(),
+  } as cr2b6_batcheses;
       this.batches[index] = updated;
       return updated;
     } else {
@@ -561,7 +561,7 @@ class MockDataProvider implements IDataProvider {
       }
 
       const now = new Date();
-      const newBatch: Batch = {
+  const newBatch: cr2b6_batcheses = {
         cr2b6_batchesid: batch.cr2b6_batchesid || newId,
         cr2b6_batchnumber: batch.cr2b6_batchnumber || newId,
         createdbyyominame: batch.createdbyyominame || "",
@@ -569,18 +569,17 @@ class MockDataProvider implements IDataProvider {
         createdonbehalfbyyominame: batch.createdonbehalfbyyominame || "",
         importsequencenumber: batch.importsequencenumber || 0,
         modifiedbyyominame: batch.modifiedbyyominame || "",
-        modifiedon: batch.modifiedon || now,
-        modifiedonbehalfbyyominame: batch.modifiedonbehalfbyyominame || "",
-        overriddencreatedon: batch.overriddencreatedon || now,
+  modifiedon: batch.modifiedon || now,
+  modifiedonbehalfbyyominame: batch.modifiedonbehalfbyyominame || "",
+  overriddencreatedon: batch.overriddencreatedon || now,
         ownerid: batch.ownerid || "system",
         owneridname: batch.owneridname || "System",
         owneridtype: batch.owneridtype || "systemuser",
         owneridyominame: batch.owneridyominame || "",
         owningbusinessunit: batch.owningbusinessunit || "",
         owningbusinessunitname: batch.owningbusinessunitname || "Default BU",
-        statecode: batch.statecode || "0",
-  color: batch.color || "#0078d4",
-      } as Batch;
+  statecode: batch.statecode || "0",
+  } as cr2b6_batcheses;
       this.batches.push(newBatch);
       return newBatch;
     }

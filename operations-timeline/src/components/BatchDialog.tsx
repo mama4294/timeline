@@ -11,13 +11,14 @@ import {
   Field,
   Input,
 } from "@fluentui/react-components";
-import type { Batch } from "../models/types";
+import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
+import { getBatchColor } from "../services/batchColor";
 
 interface BatchDialogProps {
-  batch?: Batch;
+  batch?: cr2b6_batcheses;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (batch: Partial<Batch>) => void;
+  onSave: (batch: Partial<cr2b6_batcheses>) => void;
 }
 
 export const BatchDialog: React.FC<BatchDialogProps> = ({
@@ -33,7 +34,7 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
     if (open) {
       if (batch) {
         setBatchId(batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid ?? "");
-        setColor(batch.color ?? "#0078d4");
+        setColor(getBatchColor(batch) ?? "#0078d4");
       } else {
         setBatchId("");
         setColor("#0078d4");
@@ -42,9 +43,8 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
   }, [batch, open]);
 
   const handleSave = () => {
-    const batchData: Partial<Batch> = {
+    const batchData: Partial<cr2b6_batcheses> = {
       cr2b6_batchnumber: batchId.trim(),
-      color: color,
     };
 
     if (batch) {

@@ -13,12 +13,12 @@ import {
   Option,
   Label,
 } from "@fluentui/react-components";
-import type { Batch } from "../models/types";
+import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
 
 interface DuplicateOperationsDialogProps {
   open: boolean;
   operationIds: string[];
-  batches: Batch[];
+  batches: cr2b6_batcheses[];
   onOpenChange: (open: boolean) => void;
   onDuplicate: (batchId: string | null) => void;
 }

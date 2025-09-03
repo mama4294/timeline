@@ -23,13 +23,14 @@ import {
 } from "@fluentui/react-components";
 import { Add24Regular, MoreHorizontal24Regular, Edit24Regular } from "@fluentui/react-icons";
 import { BatchDialog } from "./BatchDialog";
-import type { Batch } from "../models/types";
+import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
+import { getBatchColor } from "../services/batchColor";
 
 interface BatchManagementProps {
   open: boolean;
-  batches: Batch[];
+  batches: cr2b6_batcheses[];
   onOpenChange: (open: boolean) => void;
-  onSaveBatch: (batch: Partial<Batch>) => void;
+  onSaveBatch: (batch: Partial<cr2b6_batcheses>) => void;
 }
 
 export const BatchManagement: React.FC<BatchManagementProps> = ({
@@ -39,7 +40,7 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
   onSaveBatch,
 }) => {
   const [isBatchDialogOpen, setIsBatchDialogOpen] = useState(false);
-  const [selectedBatch, setSelectedBatch] = useState<Batch | undefined>();
+  const [selectedBatch, setSelectedBatch] = useState<cr2b6_batcheses | undefined>();
   // Deletion disabled — no batch deletion allowed from UI
 
   const handleCreateBatch = () => {
@@ -47,14 +48,14 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
     setIsBatchDialogOpen(true);
   };
 
-  const handleEditBatch = (batch: Batch) => {
+  const handleEditBatch = (batch: cr2b6_batcheses) => {
     setSelectedBatch(batch);
     setIsBatchDialogOpen(true);
   };
 
   // handleDeleteBatch intentionally removed
 
-  const handleSaveBatch = (batchData: Partial<Batch>) => {
+  const handleSaveBatch = (batchData: Partial<cr2b6_batcheses>) => {
     onSaveBatch(batchData);
     setIsBatchDialogOpen(false);
     setSelectedBatch(undefined);
@@ -95,28 +96,28 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
                       <TableCell>
                           <TableCellLayout>{batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid}</TableCellLayout>
                       </TableCell>
-                      <TableCell>
-                        <TableCellLayout>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-              <div
-                              style={{
-                                width: "20px",
-                                height: "20px",
-                backgroundColor: batch.color ?? "#ccc",
-                                border: "1px solid #ccc",
-                                borderRadius: "4px",
-                              }}
-                            />
-              {batch.color ?? ""}
-                          </div>
-                        </TableCellLayout>
-                      </TableCell>
+                              <TableCell>
+                                <TableCellLayout>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: "20px",
+                                        height: "20px",
+                                        backgroundColor: getBatchColor(batch),
+                                        border: "1px solid #ccc",
+                                        borderRadius: "4px",
+                                      }}
+                                    />
+                                    {getBatchColor(batch)}
+                                  </div>
+                                </TableCellLayout>
+                              </TableCell>
                       <TableCell>
                         <TableCellLayout>
                           {new Date(batch.createdon ?? Date.now()).toLocaleDateString()}

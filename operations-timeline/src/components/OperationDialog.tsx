@@ -12,7 +12,8 @@ import {
   Dropdown,
   Option,
 } from "@fluentui/react-components";
-import type { Operation, Batch } from "../models/types";
+import type { Operation } from "../models/types";
+import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
 import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 import { useState, useCallback, useEffect, MouseEvent } from "react";
 
@@ -31,7 +32,7 @@ interface OperationDialogProps {
   onSave: (operation: Partial<Operation>) => void;
   onDelete?: () => void;
   equipment: cr2b6_equipments[];
-  batches: Batch[];
+  batches: cr2b6_batcheses[];
 }
 
 export const OperationDialog: React.FC<OperationDialogProps> = ({
