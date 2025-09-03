@@ -1,11 +1,4 @@
-export interface Equipment {
-  id: string;
-  tag: string; // equipment tag (formerly 'name')
-  description: string;
-  isActive: boolean;
-  createdOn: Date;
-  modifiedOn: Date;
-}
+
 
 export interface Operation {
   id: string;
@@ -19,9 +12,3 @@ export interface Operation {
   modifiedOn: Date;
 }
 
-export interface Batch {
-  id: string;
-  color: string;
-  createdOn: Date;
-  modifiedOn: Date;
-}

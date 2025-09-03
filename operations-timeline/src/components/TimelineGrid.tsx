@@ -13,12 +13,15 @@ import moment from "moment";
 import { useViewport } from "../hooks/useViewport";
 import TimelineControls from "./TimelineControls";
 import { dataProvider } from "../services/dataProvider";
+import { getBatchColor } from "../services/batchColor";
 import { EquipmentDialog } from "./EquipmentDialog";
 import { OperationDialog } from "./OperationDialog";
 import { ContextMenu } from "./ContextMenu";
 import { DuplicateOperationsDialog } from "./DuplicateOperationsDialog";
 import { BatchManagement } from "./BatchManagement";
-import type { Equipment, Operation, Batch } from "../models/types";
+import type { Operation } from "../models/types";
+import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
+import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 // types are available in models if needed
 
 export default function TimelineGrid() {
@@ -35,7 +38,7 @@ export default function TimelineGrid() {
   const [items, setItems] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<
-    Equipment | undefined
+    cr2b6_equipments | undefined
   >();
 
   // Operation dialog state
@@ -43,8 +46,8 @@ export default function TimelineGrid() {
   const [selectedOperation, setSelectedOperation] = useState<
     Operation | undefined
   >();
-  const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
+  const [equipment, setEquipment] = useState<cr2b6_equipments[]>([]);
+  const [batches, setBatches] = useState<cr2b6_batcheses[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   // Edit mode state: when false, editing actions are disabled
   const [editMode, setEditMode] = useState<boolean>(false);
@@ -83,8 +86,10 @@ export default function TimelineGrid() {
 
   // Helper function to create timeline items from operations
   const createTimelineItem = (operation: Operation) => {
-    const batch = batches.find((b) => b.id === operation.batchId);
-    const bgColor = batch ? batch.color : "#ccc";
+    const batch = batches.find(
+      (b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === operation.batchId
+    );
+    const bgColor = batch ? getBatchColor(batch) : "#ccc";
 
     return {
       id: operation.id,
@@ -113,19 +118,20 @@ export default function TimelineGrid() {
       console.log("Batches:", batches);
       const batchColorById: Record<string, string> = {};
       batches.forEach((b) => {
-        batchColorById[b.id] = b.color;
+        const bid = b.cr2b6_batchnumber ?? b.cr2b6_batchesid;
+        if (bid) batchColorById[String(bid)] = getBatchColor(b);
       });
       if (!mounted) return;
 
-      setEquipment(eq);
+      setEquipment(eq as cr2b6_equipments[]);
       setBatches(batches);
       setOperations(ops);
 
       setGroups(
-        eq.map((g) => ({
-          id: g.id,
-          title: g.description,
-          rightTitle: g.tag,
+        eq.map((g: any) => ({
+          id: g.cr2b6_equipmentid,
+          title: g.cr2b6_description,
+          rightTitle: g.cr2b6_tag,
         }))
       );
 
@@ -137,7 +143,7 @@ export default function TimelineGrid() {
           title: o.description,
           description: o.description, // Add description for tooltip
           type: o.type,
-          batchId: o.batchId, // Add batchId for tooltip
+          batchId: o.batchId, // Add batchId for tooltip (expects cr2b6_batchnumber)
           start_time: moment(o.startTime).valueOf(),
           end_time: moment(o.endTime).valueOf(),
           itemProps: {
@@ -457,10 +463,12 @@ export default function TimelineGrid() {
     console.log("Group ID clicked:", groupId);
     const allEquipment = await dataProvider.getEquipment();
     console.log("All equipment:", allEquipment);
-    const equipment = allEquipment.find((eq) => eq.id === groupId);
+    const equipment = allEquipment.find(
+      (eq: any) => eq.cr2b6_equipmentid === groupId
+    );
     console.log("Found equipment:", equipment);
     if (equipment) {
-      setSelectedEquipment(equipment);
+      setSelectedEquipment(equipment as cr2b6_equipments);
       setIsDialogOpen(true);
     }
   };
@@ -474,15 +482,15 @@ export default function TimelineGrid() {
   const refreshEquipment = async () => {
     const eq = await dataProvider.getEquipment();
     setGroups(
-      eq.map((g) => ({
-        id: g.id,
-        title: g.description,
-        rightTitle: g.tag,
+      eq.map((g: any) => ({
+        id: g.cr2b6_equipmentid,
+        title: g.cr2b6_description,
+        rightTitle: g.cr2b6_tag,
       }))
     );
   };
 
-  const handleSaveEquipment = async (equipment: Partial<Equipment>) => {
+  const handleSaveEquipment = async (equipment: Partial<cr2b6_equipments>) => {
     try {
       await dataProvider.saveEquipment(equipment);
       await refreshEquipment();
@@ -591,15 +599,25 @@ export default function TimelineGrid() {
     setIsBatchManagementOpen(true);
   };
 
-  const handleSaveBatch = async (batchData: Partial<Batch>) => {
+  const handleSaveBatch = async (batchData: Partial<cr2b6_batcheses>) => {
     try {
       const savedBatch = await dataProvider.saveBatch(batchData);
 
-      // Update batches state
-      if (batches.find((b) => b.id === savedBatch.id)) {
+      // Update batches state using cr2b6_batchnumber as canonical key
+      const savedKey =
+        savedBatch.cr2b6_batchnumber || savedBatch.cr2b6_batchesid;
+      if (
+        batches.find(
+          (b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === savedKey
+        )
+      ) {
         // Update existing batch
         setBatches((prev) =>
-          prev.map((batch) => (batch.id === savedBatch.id ? savedBatch : batch))
+          prev.map((batch) =>
+            (batch.cr2b6_batchnumber || batch.cr2b6_batchesid) === savedKey
+              ? savedBatch
+              : batch
+          )
         );
       } else {
         // Add new batch

@@ -1,121 +1,296 @@
-import type { Equipment, Operation, Batch } from "../models/types";
+import type { Operation } from "../models/types";
+import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
+import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 
 export interface IDataProvider {
-  getEquipment(): Promise<Equipment[]>;
+  getEquipment(): Promise<cr2b6_equipments[]>;
   getOperations(startDate: Date, endDate: Date): Promise<Operation[]>;
-  getBatches(): Promise<Batch[]>;
-  saveEquipment(equipment: Partial<Equipment>): Promise<Equipment>;
+  getBatches(): Promise<cr2b6_batcheses[]>;
+  saveEquipment(equipment: Partial<cr2b6_equipments>): Promise<cr2b6_equipments>;
   deleteEquipment(id: string): Promise<void>;
   saveOperation(operation: Partial<Operation>): Promise<Operation>;
   deleteOperation(id: string): Promise<void>;
-  saveBatch(batch: Partial<Batch>): Promise<Batch>;
+  saveBatch(batch: Partial<cr2b6_batcheses>): Promise<cr2b6_batcheses>;
   deleteBatch(id: string): Promise<void>;
 }
 
 class MockDataProvider implements IDataProvider {
-  private equipment: Equipment[] = [
+  private equipment: cr2b6_equipments[] = [
     {
-      id: "1",
-      tag: "V-3300A",
-      description: "3A Fermenter",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "3A Fermenter",
+      cr2b6_equipmentid: "1",
+      cr2b6_tag: "V-3300A",
+      cr2b6_taganddescription: "V-3300A - 3A Fermenter",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "2",
-      tag: "V-3300B",
-      description: "3B Fermenter",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "3B Fermenter",
+      cr2b6_equipmentid: "2",
+      cr2b6_tag: "V-3300B",
+      cr2b6_taganddescription: "V-3300B - 3B Fermenter",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "3",
-      tag: "V-3300C",
-      description: "3C Fermenter",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "3C Fermenter",
+      cr2b6_equipmentid: "3",
+      cr2b6_tag: "V-3300C",
+      cr2b6_taganddescription: "V-3300C - 3C Fermenter",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "4",
-      tag: "V-3300D",
-      description: "3D Fermenter",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "3D Fermenter",
+      cr2b6_equipmentid: "4",
+      cr2b6_tag: "V-3300D",
+      cr2b6_taganddescription: "V-3300D - 3D Fermenter",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "5",
-      tag: "V-3300E",
-      description: "3E Fermenter",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "3E Fermenter",
+      cr2b6_equipmentid: "5",
+      cr2b6_tag: "V-3300E",
+      cr2b6_taganddescription: "V-3300E - 3E Fermenter",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "6",
-      tag: "V-3300F",
-      description: "3F Fermenter",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "3F Fermenter",
+      cr2b6_equipmentid: "6",
+      cr2b6_tag: "V-3300F",
+      cr2b6_taganddescription: "V-3300F - 3F Fermenter",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "7",
-      tag: "U-4000",
-      description: "Centrifuge",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "Centrifuge",
+      cr2b6_equipmentid: "7",
+      cr2b6_tag: "U-4000",
+      cr2b6_taganddescription: "U-4000 - Centrifuge",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "8",
-      tag: "U-4400",
-      description: "Decanter",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "Decanter",
+      cr2b6_equipmentid: "8",
+      cr2b6_tag: "U-4400",
+      cr2b6_taganddescription: "U-4400 - Decanter",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "9",
-      tag: "U-4600",
-      description: "Homogenizer",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "Homogenizer",
+      cr2b6_equipmentid: "9",
+      cr2b6_tag: "U-4600",
+      cr2b6_taganddescription: "U-4600 - Homogenizer",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "10",
-      tag: "U-4700",
-      description: "Ceramic Skid",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "Ceramic Skid",
+      cr2b6_equipmentid: "10",
+      cr2b6_tag: "U-4700",
+      cr2b6_taganddescription: "U-4700 - Ceramic Skid",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
     {
-      id: "11",
-      tag: "U-4500",
-      description: "Ultrafilter",
-      isActive: true,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_description: "Ultrafilter",
+      cr2b6_equipmentid: "11",
+      cr2b6_tag: "U-4500",
+      cr2b6_taganddescription: "U-4500 - Ultrafilter",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
     },
   ];
 
-  private batches: Batch[] = [
+  // Use cr2b6_batcheses-compatible mock entries; use cr2b6_batchnumber as canonical id
+  private batches: cr2b6_batcheses[] = [
     {
-      id: "25-HTS-30",
-      color: "#1f77b4",
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      // primary id used by Dataverse
+      cr2b6_batchesid: "25-HTS-30",
+      cr2b6_batchnumber: "25-HTS-30",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+  owningbusinessunitname: "Default BU",
+      statecode: "0",
+  
     },
     {
-      id: "25-HTS-31",
-      color: "#ff7f0e", // Different color for the second batch
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_batchesid: "25-HTS-31",
+      cr2b6_batchnumber: "25-HTS-31",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
+  
     },
   ];
 
@@ -249,8 +424,8 @@ class MockDataProvider implements IDataProvider {
     return allOps;
   })();
 
-  async getEquipment(): Promise<Equipment[]> {
-    return Promise.resolve([...this.equipment]);
+  async getEquipment(): Promise<cr2b6_equipments[]> {
+    return Promise.resolve(this.equipment.map((e) => ({ ...e })));
   }
 
   async getOperations(startDate: Date, endDate: Date): Promise<Operation[]> {
@@ -271,33 +446,44 @@ class MockDataProvider implements IDataProvider {
     return Promise.resolve(filteredOps);
   }
 
-  async getBatches(): Promise<Batch[]> {
+  async getBatches(): Promise<cr2b6_batcheses[]> {
     return Promise.resolve([...this.batches]);
   }
 
-  async saveEquipment(equipment: Partial<Equipment>): Promise<Equipment> {
-    if (equipment.id) {
-      // Update existing equipment
-      const index = this.equipment.findIndex((eq) => eq.id === equipment.id);
+  async saveEquipment(equipment: Partial<cr2b6_equipments>): Promise<cr2b6_equipments> {
+    if (equipment.cr2b6_equipmentid) {
+      const index = this.equipment.findIndex((eq) => eq.cr2b6_equipmentid === equipment.cr2b6_equipmentid);
       if (index === -1) throw new Error("Equipment not found");
-
-      const updated = {
+      const updated: cr2b6_equipments = {
         ...this.equipment[index],
         ...equipment,
-        modifiedOn: new Date(),
-      };
+      } as cr2b6_equipments;
       this.equipment[index] = updated;
       return updated;
     } else {
-      // Create new equipment
-      const newEquipment: Equipment = {
-        id: String(this.equipment.length + 1),
-        tag: equipment.tag || "",
-        description: equipment.description || "",
-        isActive: equipment.isActive ?? true,
-        createdOn: new Date(),
-        modifiedOn: new Date(),
-      };
+      const newId = String(this.equipment.length + 1);
+      const now = new Date();
+      const newEquipment: cr2b6_equipments = {
+        cr2b6_description: equipment.cr2b6_description || "",
+        cr2b6_equipmentid: newId,
+        cr2b6_tag: equipment.cr2b6_tag || "",
+        cr2b6_taganddescription: `${equipment.cr2b6_tag || ''} - ${equipment.cr2b6_description || ''}`,
+        createdbyyominame: equipment.createdbyyominame || "",
+        createdon: equipment.createdon || now,
+        createdonbehalfbyyominame: equipment.createdonbehalfbyyominame || "",
+        importsequencenumber: equipment.importsequencenumber || 0,
+        modifiedbyyominame: equipment.modifiedbyyominame || "",
+        modifiedon: equipment.modifiedon || now,
+        modifiedonbehalfbyyominame: equipment.modifiedonbehalfbyyominame || "",
+        overriddencreatedon: equipment.overriddencreatedon || now,
+        ownerid: equipment.ownerid || "system",
+        owneridname: equipment.owneridname || "System",
+        owneridtype: equipment.owneridtype || "systemuser",
+        owneridyominame: equipment.owneridyominame || "",
+        owningbusinessunit: equipment.owningbusinessunit || "",
+        owningbusinessunitname: equipment.owningbusinessunitname || "Default BU",
+        statecode: equipment.statecode || "0",
+      } as cr2b6_equipments;
       this.equipment.push(newEquipment);
       return newEquipment;
     }
@@ -349,34 +535,51 @@ class MockDataProvider implements IDataProvider {
     this.operations.splice(index, 1);
   }
 
-  async saveBatch(batch: Partial<Batch>): Promise<Batch> {
-    if (batch.id && this.batches.find((b) => b.id === batch.id)) {
+  async saveBatch(batch: Partial<cr2b6_batcheses>): Promise<cr2b6_batcheses> {
+  const primaryId = batch.cr2b6_batchnumber || batch.cr2b6_batchesid;
+  if (primaryId && this.batches.find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === primaryId)) {
       // Update existing batch
-      const index = this.batches.findIndex((b) => b.id === batch.id);
+  const index = this.batches.findIndex((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === primaryId);
       if (index === -1) throw new Error("Batch not found");
 
-      const updated = {
+  const updated: cr2b6_batcheses = {
         ...this.batches[index],
         ...batch,
-        modifiedOn: new Date(),
-      };
+        // Ensure cr2b6_batchnumber is set and used as the canonical key
+        cr2b6_batchesid: this.batches[index].cr2b6_batchesid || batch.cr2b6_batchesid,
+        cr2b6_batchnumber: batch.cr2b6_batchnumber || this.batches[index].cr2b6_batchnumber || primaryId,
+  modifiedon: new Date(),
+  } as cr2b6_batcheses;
       this.batches[index] = updated;
       return updated;
     } else {
       // Create new batch
-      if (!batch.id) throw new Error("Batch ID is required");
-
-      // Check if batch ID already exists
-      if (this.batches.find((b) => b.id === batch.id)) {
+  if (!batch.cr2b6_batchnumber && !batch.cr2b6_batchesid) throw new Error("Batch ID is required");
+  const newId = batch.cr2b6_batchnumber || batch.cr2b6_batchesid!;
+  if (this.batches.find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === newId)) {
         throw new Error("Batch ID already exists");
       }
 
-      const newBatch: Batch = {
-        id: batch.id,
-        color: batch.color || "#0078d4",
-        createdOn: new Date(),
-        modifiedOn: new Date(),
-      };
+      const now = new Date();
+  const newBatch: cr2b6_batcheses = {
+        cr2b6_batchesid: batch.cr2b6_batchesid || newId,
+        cr2b6_batchnumber: batch.cr2b6_batchnumber || newId,
+        createdbyyominame: batch.createdbyyominame || "",
+        createdon: batch.createdon || now,
+        createdonbehalfbyyominame: batch.createdonbehalfbyyominame || "",
+        importsequencenumber: batch.importsequencenumber || 0,
+        modifiedbyyominame: batch.modifiedbyyominame || "",
+  modifiedon: batch.modifiedon || now,
+  modifiedonbehalfbyyominame: batch.modifiedonbehalfbyyominame || "",
+  overriddencreatedon: batch.overriddencreatedon || now,
+        ownerid: batch.ownerid || "system",
+        owneridname: batch.owneridname || "System",
+        owneridtype: batch.owneridtype || "systemuser",
+        owneridyominame: batch.owneridyominame || "",
+        owningbusinessunit: batch.owningbusinessunit || "",
+        owningbusinessunitname: batch.owningbusinessunitname || "Default BU",
+  statecode: batch.statecode || "0",
+  } as cr2b6_batcheses;
       this.batches.push(newBatch);
       return newBatch;
     }

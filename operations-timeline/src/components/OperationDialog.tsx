@@ -12,7 +12,9 @@ import {
   Dropdown,
   Option,
 } from "@fluentui/react-components";
-import { Operation, Equipment, Batch } from "../models/types";
+import type { Operation } from "../models/types";
+import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
+import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 import { useState, useCallback, useEffect, MouseEvent } from "react";
 
 import type {
@@ -29,8 +31,8 @@ interface OperationDialogProps {
   ) => void;
   onSave: (operation: Partial<Operation>) => void;
   onDelete?: () => void;
-  equipment: Equipment[];
-  batches: Batch[];
+  equipment: cr2b6_equipments[];
+  batches: cr2b6_batcheses[];
 }
 
 export const OperationDialog: React.FC<OperationDialogProps> = ({
@@ -130,8 +132,8 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               <Dropdown
                 placeholder="Select equipment"
                 value={
-                  equipment.find((eq) => eq.id === formData.equipmentId)
-                    ?.description || ""
+                  equipment.find((eq) => eq.cr2b6_equipmentid === formData.equipmentId)
+                    ?.cr2b6_description || ""
                 }
                 onOptionSelect={(_, data) =>
                   handleChange("equipmentId", data.optionValue)
@@ -139,11 +141,11 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               >
                 {equipment.map((eq) => (
                   <Option
-                    key={eq.id}
-                    value={eq.id}
-                    text={`${eq.description} (${eq.tag})`}
+                    key={eq.cr2b6_equipmentid}
+                    value={eq.cr2b6_equipmentid}
+                    text={`${eq.cr2b6_description} (${eq.cr2b6_tag})`}
                   >
-                    {eq.description} ({eq.tag})
+                    {eq.cr2b6_description} ({eq.cr2b6_tag})
                   </Option>
                 ))}
               </Dropdown>
@@ -153,8 +155,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               <Dropdown
                 placeholder="Select batch (optional)"
                 value={
-                  batches.find((batch) => batch.id === formData.batchId)?.id ||
-                  ""
+                  batches.find((batch) => (batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid) === formData.batchId)?.cr2b6_batchnumber ?? ""
                 }
                 onOptionSelect={(_, data) =>
                   handleChange(
@@ -166,11 +167,14 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                 <Option value="" text="No Batch">
                   No Batch
                 </Option>
-                {batches.map((batch) => (
-                  <Option key={batch.id} value={batch.id} text={batch.id}>
-                    {batch.id}
-                  </Option>
-                ))}
+                {batches.map((batch) => {
+                  const bid = batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid ?? "";
+                  return (
+                    <Option key={bid} value={bid} text={String(bid)}>
+                      {String(bid)}
+                    </Option>
+                  );
+                })}
               </Dropdown>
             </Field>
 

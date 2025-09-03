@@ -1,12 +1,32 @@
 {
   "appId": "",
-  "appDisplayName": "Operations Timeline",
+  "appDisplayName": "operationsSchedule",
   "description": null,
-  "environmentId": "290f3c82-792c-e821-87bb-5378149bf319",
+  "environmentId": "Default-314a500a-e012-42a2-9513-01bc10b3dc6e",
   "buildPath": "./dist",
   "buildEntryPoint": "index.html",
-  "logoPath": "/Users/matthewmalone/Documents/Builds/PowerApps/timeline/operations-timeline/public/vite.svg",
+  "logoPath": "Default",
   "localAppUrl": "http://localhost:3000/",
   "connectionReferences": {},
-  "databaseReferences": {}
+  "databaseReferences": {
+    "default.cds": {
+      "state": "Configured",
+      "instanceUrl": "https://org8ef10ef2.crm.dynamics.com/",
+      "webApiVersion": "v9.0",
+      "dataSources": {
+        "cr2b6_equipments": {
+          "entitySetName": "cr2b6_equipments",
+          "logicalName": "cr2b6_equipment",
+          "isHidden": false
+        },
+        "cr2b6_batcheses": {
+          "entitySetName": "cr2b6_batcheses",
+          "logicalName": "cr2b6_batches",
+          "isHidden": false
+        }
+      },
+      "version": "v9.0",
+      "environmentVariableName": ""
+    }
+  }
 }

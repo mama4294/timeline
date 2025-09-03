@@ -7,12 +7,11 @@ import {
   DialogActions,
   Button,
   Input,
-  Label,
-  Switch,
+  
   Field,
   Divider,
 } from "@fluentui/react-components";
-import { Equipment } from "../models/types";
+import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 import { useState, useCallback, useEffect, MouseEvent } from "react";
 
 import type {
@@ -21,13 +20,13 @@ import type {
 } from "@fluentui/react-components";
 
 interface EquipmentDialogProps {
-  equipment?: Equipment;
+  equipment?: cr2b6_equipments;
   open: boolean;
   onOpenChange: (
     event: DialogOpenChangeEvent,
     data: DialogOpenChangeData
   ) => void;
-  onSave: (equipment: Partial<Equipment>) => void;
+  onSave: (equipment: Partial<cr2b6_equipments>) => void;
 }
 
 export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
@@ -36,11 +35,20 @@ export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
   onOpenChange,
   onSave,
 }) => {
-  const [formData, setFormData] = useState<Partial<Equipment>>(
+  const [formData, setFormData] = useState<Partial<cr2b6_equipments>>(
     equipment ?? {
-      tag: "",
-      description: "",
-      isActive: true,
+      cr2b6_tag: "",
+      cr2b6_description: "",
+      owningbusinessunitname: "Default BU",
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      createdbyyominame: "",
+      createdonbehalfbyyominame: "",
+      modifiedbyyominame: "",
+      modifiedonbehalfbyyominame: "",
+      statecode: "0",
     }
   );
 
@@ -50,14 +58,23 @@ export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
       setFormData(equipment);
     } else {
       setFormData({
-        tag: "",
-        description: "",
-        isActive: true,
+        cr2b6_tag: "",
+        cr2b6_description: "",
+        owningbusinessunitname: "Default BU",
+        ownerid: "system",
+        owneridname: "System",
+        owneridtype: "systemuser",
+        owneridyominame: "",
+        createdbyyominame: "",
+        createdonbehalfbyyominame: "",
+        modifiedbyyominame: "",
+        modifiedonbehalfbyyominame: "",
+        statecode: "0",
       });
     }
   }, [equipment]);
 
-  const handleChange = useCallback((field: keyof Equipment, value: any) => {
+  const handleChange = useCallback((field: keyof cr2b6_equipments, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
@@ -89,28 +106,15 @@ export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
           >
             <Field label="Tag" required>
               <Input
-                value={formData.tag}
-                onChange={(e) => handleChange("tag", e.target.value)}
+                value={(formData as any).cr2b6_tag || ""}
+                onChange={(e) => handleChange("cr2b6_tag", e.target.value as any)}
               />
             </Field>
             <Field label="Description" required>
               <Input
-                value={formData.description}
-                onChange={(e) => handleChange("description", e.target.value)}
+                value={(formData as any).cr2b6_description || ""}
+                onChange={(e) => handleChange("cr2b6_description", e.target.value as any)}
               />
-            </Field>
-            <Field>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <Switch
-                  checked={formData.isActive}
-                  onChange={(_e, data) =>
-                    handleChange("isActive", data.checked)
-                  }
-                />
-                <Label>Active</Label>
-              </div>
             </Field>
           </div>
         </DialogBody>
