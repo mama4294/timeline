@@ -91,9 +91,9 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
                 </TableHeader>
                 <TableBody>
                   {batches.map((batch) => (
-                    <TableRow key={batch.id}>
+                    <TableRow key={batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid}>
                       <TableCell>
-                        <TableCellLayout>{batch.id}</TableCellLayout>
+                          <TableCellLayout>{batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid}</TableCellLayout>
                       </TableCell>
                       <TableCell>
                         <TableCellLayout>
@@ -104,27 +104,27 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
                               gap: "8px",
                             }}
                           >
-                            <div
+              <div
                               style={{
                                 width: "20px",
                                 height: "20px",
-                                backgroundColor: batch.color,
+                backgroundColor: batch.color ?? "#ccc",
                                 border: "1px solid #ccc",
                                 borderRadius: "4px",
                               }}
                             />
-                            {batch.color}
+              {batch.color ?? ""}
                           </div>
                         </TableCellLayout>
                       </TableCell>
                       <TableCell>
                         <TableCellLayout>
-                          {new Date(batch.createdOn).toLocaleDateString()}
+                          {new Date(batch.createdon ?? Date.now()).toLocaleDateString()}
                         </TableCellLayout>
                       </TableCell>
                       <TableCell>
                         <TableCellLayout>
-                          {new Date(batch.modifiedOn).toLocaleDateString()}
+                          {new Date(batch.modifiedon ?? Date.now()).toLocaleDateString()}
                         </TableCellLayout>
                       </TableCell>
                       <TableCell>

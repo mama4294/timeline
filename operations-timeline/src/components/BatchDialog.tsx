@@ -32,8 +32,8 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
   useEffect(() => {
     if (open) {
       if (batch) {
-        setBatchId(batch.id);
-        setColor(batch.color);
+        setBatchId(batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid ?? "");
+        setColor(batch.color ?? "#0078d4");
       } else {
         setBatchId("");
         setColor("#0078d4");
@@ -43,15 +43,14 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
 
   const handleSave = () => {
     const batchData: Partial<Batch> = {
-      id: batchId.trim(),
+      cr2b6_batchnumber: batchId.trim(),
       color: color,
     };
 
     if (batch) {
-      // Editing existing batch - include the original id
-      batchData.id = batch.id; // Keep original ID
-      batchData.createdOn = batch.createdOn;
-      batchData.modifiedOn = new Date();
+      // Editing existing batch - keep created/modified (Dataverse fields)
+      if (batch.createdon) batchData.createdon = batch.createdon;
+      batchData.modifiedon = new Date();
     }
 
     onSave(batchData);

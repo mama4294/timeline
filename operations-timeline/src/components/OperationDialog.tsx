@@ -154,8 +154,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               <Dropdown
                 placeholder="Select batch (optional)"
                 value={
-                  batches.find((batch) => batch.id === formData.batchId)?.id ||
-                  ""
+                  batches.find((batch) => (batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid) === formData.batchId)?.cr2b6_batchnumber ?? ""
                 }
                 onOptionSelect={(_, data) =>
                   handleChange(
@@ -167,11 +166,14 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                 <Option value="" text="No Batch">
                   No Batch
                 </Option>
-                {batches.map((batch) => (
-                  <Option key={batch.id} value={batch.id} text={batch.id}>
-                    {batch.id}
-                  </Option>
-                ))}
+                {batches.map((batch) => {
+                  const bid = batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid ?? "";
+                  return (
+                    <Option key={bid} value={bid} text={String(bid)}>
+                      {String(bid)}
+                    </Option>
+                  );
+                })}
               </Dropdown>
             </Field>
 

@@ -248,18 +248,48 @@ class MockDataProvider implements IDataProvider {
     },
   ];
 
+  // Use cr2b6_batcheses-compatible mock entries; use cr2b6_batchnumber as canonical id
   private batches: Batch[] = [
     {
-      id: "25-HTS-30",
-      color: "#1f77b4",
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      // primary id used by Dataverse
+      cr2b6_batchesid: "25-HTS-30",
+      cr2b6_batchnumber: "25-HTS-30",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+  owningbusinessunitname: "Default BU",
+      statecode: "0",
+  color: "#1f77b4",
     },
     {
-      id: "25-HTS-31",
-      color: "#ff7f0e", // Different color for the second batch
-      createdOn: new Date(),
-      modifiedOn: new Date(),
+      cr2b6_batchesid: "25-HTS-31",
+      cr2b6_batchnumber: "25-HTS-31",
+      createdbyyominame: "",
+      createdon: new Date(),
+      createdonbehalfbyyominame: "",
+      importsequencenumber: 0,
+      modifiedbyyominame: "",
+      modifiedon: new Date(),
+      modifiedonbehalfbyyominame: "",
+      overriddencreatedon: new Date(),
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      owningbusinessunit: "",
+      owningbusinessunitname: "Default BU",
+      statecode: "0",
+  color: "#ff7f0e",
     },
   ];
 
@@ -505,33 +535,52 @@ class MockDataProvider implements IDataProvider {
   }
 
   async saveBatch(batch: Partial<Batch>): Promise<Batch> {
-    if (batch.id && this.batches.find((b) => b.id === batch.id)) {
+  const primaryId = batch.cr2b6_batchnumber || batch.cr2b6_batchesid;
+  if (primaryId && this.batches.find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === primaryId)) {
       // Update existing batch
-      const index = this.batches.findIndex((b) => b.id === batch.id);
+  const index = this.batches.findIndex((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === primaryId);
       if (index === -1) throw new Error("Batch not found");
 
-      const updated = {
+      const updated: Batch = {
         ...this.batches[index],
         ...batch,
-        modifiedOn: new Date(),
-      };
+        // Ensure cr2b6_batchnumber is set and used as the canonical key
+        cr2b6_batchesid: this.batches[index].cr2b6_batchesid || batch.cr2b6_batchesid,
+        cr2b6_batchnumber: batch.cr2b6_batchnumber || this.batches[index].cr2b6_batchnumber || primaryId,
+        modifiedon: new Date(),
+        color: batch.color || this.batches[index].color,
+      } as Batch;
       this.batches[index] = updated;
       return updated;
     } else {
       // Create new batch
-      if (!batch.id) throw new Error("Batch ID is required");
-
-      // Check if batch ID already exists
-      if (this.batches.find((b) => b.id === batch.id)) {
+  if (!batch.cr2b6_batchnumber && !batch.cr2b6_batchesid) throw new Error("Batch ID is required");
+  const newId = batch.cr2b6_batchnumber || batch.cr2b6_batchesid!;
+  if (this.batches.find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === newId)) {
         throw new Error("Batch ID already exists");
       }
 
+      const now = new Date();
       const newBatch: Batch = {
-        id: batch.id,
-        color: batch.color || "#0078d4",
-        createdOn: new Date(),
-        modifiedOn: new Date(),
-      };
+        cr2b6_batchesid: batch.cr2b6_batchesid || newId,
+        cr2b6_batchnumber: batch.cr2b6_batchnumber || newId,
+        createdbyyominame: batch.createdbyyominame || "",
+        createdon: batch.createdon || now,
+        createdonbehalfbyyominame: batch.createdonbehalfbyyominame || "",
+        importsequencenumber: batch.importsequencenumber || 0,
+        modifiedbyyominame: batch.modifiedbyyominame || "",
+        modifiedon: batch.modifiedon || now,
+        modifiedonbehalfbyyominame: batch.modifiedonbehalfbyyominame || "",
+        overriddencreatedon: batch.overriddencreatedon || now,
+        ownerid: batch.ownerid || "system",
+        owneridname: batch.owneridname || "System",
+        owneridtype: batch.owneridtype || "systemuser",
+        owneridyominame: batch.owneridyominame || "",
+        owningbusinessunit: batch.owningbusinessunit || "",
+        owningbusinessunitname: batch.owningbusinessunitname || "Default BU",
+        statecode: batch.statecode || "0",
+  color: batch.color || "#0078d4",
+      } as Batch;
       this.batches.push(newBatch);
       return newBatch;
     }

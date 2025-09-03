@@ -84,8 +84,8 @@ export default function TimelineGrid() {
 
   // Helper function to create timeline items from operations
   const createTimelineItem = (operation: Operation) => {
-    const batch = batches.find((b) => b.id === operation.batchId);
-    const bgColor = batch ? batch.color : "#ccc";
+  const batch = batches.find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === operation.batchId);
+  const bgColor = batch ? batch.color : "#ccc";
 
     return {
       id: operation.id,
@@ -114,7 +114,8 @@ export default function TimelineGrid() {
       console.log("Batches:", batches);
       const batchColorById: Record<string, string> = {};
       batches.forEach((b) => {
-        batchColorById[b.id] = b.color;
+  const bid = b.cr2b6_batchnumber ?? b.cr2b6_batchesid;
+        if (bid) batchColorById[String(bid)] = b.color ?? "";
       });
       if (!mounted) return;
 
@@ -138,7 +139,7 @@ export default function TimelineGrid() {
           title: o.description,
           description: o.description, // Add description for tooltip
           type: o.type,
-          batchId: o.batchId, // Add batchId for tooltip
+          batchId: o.batchId, // Add batchId for tooltip (expects cr2b6_batchnumber)
           start_time: moment(o.startTime).valueOf(),
           end_time: moment(o.endTime).valueOf(),
           itemProps: {
@@ -561,11 +562,12 @@ export default function TimelineGrid() {
     try {
       const savedBatch = await dataProvider.saveBatch(batchData);
 
-      // Update batches state
-      if (batches.find((b) => b.id === savedBatch.id)) {
+      // Update batches state using cr2b6_batchnumber as canonical key
+      const savedKey = savedBatch.cr2b6_batchnumber || savedBatch.cr2b6_batchesid;
+      if (batches.find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === savedKey)) {
         // Update existing batch
         setBatches((prev) =>
-          prev.map((batch) => (batch.id === savedBatch.id ? savedBatch : batch))
+          prev.map((batch) => ((batch.cr2b6_batchnumber || batch.cr2b6_batchesid) === savedKey ? savedBatch : batch))
         );
       } else {
         // Add new batch

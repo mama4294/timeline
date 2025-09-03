@@ -60,7 +60,7 @@ export const DuplicateOperationsDialog: React.FC<
                 placeholder="Select a batch (or leave empty for no batch)"
                 value={
                   selectedBatchId
-                    ? batches.find((b) => b.id === selectedBatchId)?.id || ""
+                    ? batches.find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === selectedBatchId)?.cr2b6_batchnumber || ""
                     : ""
                 }
                 selectedOptions={selectedBatchId ? [selectedBatchId] : []}
@@ -69,15 +69,14 @@ export const DuplicateOperationsDialog: React.FC<
                 }}
                 clearable
               >
-                {batches.map((batch) => (
-                  <Option
-                    key={batch.id}
-                    value={batch.id}
-                    text={`Batch ${batch.id}`}
-                  >
-                    Batch {batch.id}
-                  </Option>
-                ))}
+                {batches.map((batch) => {
+                  const bid = batch.cr2b6_batchnumber || batch.cr2b6_batchesid || "";
+                  return (
+                    <Option key={bid} value={bid} text={`Batch ${bid}`}>
+                      Batch {bid}
+                    </Option>
+                  );
+                })}
               </Dropdown>
             </Field>
           </DialogContent>
