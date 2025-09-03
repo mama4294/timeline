@@ -186,12 +186,14 @@ export default function TimelineGrid() {
     const titleMatch = it.title && String(it.title).toLowerCase().includes(s);
     const descMatch =
       it.description && String(it.description).toLowerCase().includes(s);
-    // find equipment
-    const eq = equipment.find((e) => String(e.id) === String(it.group));
+    // find equipment by the Dataverse-generated id field
+    const eq = equipment.find(
+      (e) => String(e.cr2b6_equipmentid) === String(it.group)
+    );
     const equipmentMatch =
       eq &&
-      (String(eq.description).toLowerCase().includes(s) ||
-        String(eq.tag || "")
+      (String(eq.cr2b6_description || "").toLowerCase().includes(s) ||
+        String(eq.cr2b6_tag || "")
           .toLowerCase()
           .includes(s));
     return Boolean(
