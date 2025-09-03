@@ -12,7 +12,8 @@ import {
   Dropdown,
   Option,
 } from "@fluentui/react-components";
-import { Operation, Equipment, Batch } from "../models/types";
+import type { Operation, Batch } from "../models/types";
+import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 import { useState, useCallback, useEffect, MouseEvent } from "react";
 
 import type {
@@ -29,7 +30,7 @@ interface OperationDialogProps {
   ) => void;
   onSave: (operation: Partial<Operation>) => void;
   onDelete?: () => void;
-  equipment: Equipment[];
+  equipment: cr2b6_equipments[];
   batches: Batch[];
 }
 
@@ -130,8 +131,8 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               <Dropdown
                 placeholder="Select equipment"
                 value={
-                  equipment.find((eq) => eq.id === formData.equipmentId)
-                    ?.description || ""
+                  equipment.find((eq) => eq.cr2b6_equipmentid === formData.equipmentId)
+                    ?.cr2b6_description || ""
                 }
                 onOptionSelect={(_, data) =>
                   handleChange("equipmentId", data.optionValue)
@@ -139,11 +140,11 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               >
                 {equipment.map((eq) => (
                   <Option
-                    key={eq.id}
-                    value={eq.id}
-                    text={`${eq.description} (${eq.tag})`}
+                    key={eq.cr2b6_equipmentid}
+                    value={eq.cr2b6_equipmentid}
+                    text={`${eq.cr2b6_description} (${eq.cr2b6_tag})`}
                   >
-                    {eq.description} ({eq.tag})
+                    {eq.cr2b6_description} ({eq.cr2b6_tag})
                   </Option>
                 ))}
               </Dropdown>

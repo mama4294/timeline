@@ -18,7 +18,8 @@ import { OperationDialog } from "./OperationDialog";
 import { ContextMenu } from "./ContextMenu";
 import { DuplicateOperationsDialog } from "./DuplicateOperationsDialog";
 import { BatchManagement } from "./BatchManagement";
-import type { Equipment, Operation, Batch } from "../models/types";
+import type { Operation, Batch } from "../models/types";
+import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 // types are available in models if needed
 
 export default function TimelineGrid() {
@@ -35,7 +36,7 @@ export default function TimelineGrid() {
   const [items, setItems] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<
-    Equipment | undefined
+    cr2b6_equipments | undefined
   >();
 
   // Operation dialog state
@@ -43,7 +44,7 @@ export default function TimelineGrid() {
   const [selectedOperation, setSelectedOperation] = useState<
     Operation | undefined
   >();
-  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [equipment, setEquipment] = useState<cr2b6_equipments[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   // Edit mode state: when false, editing actions are disabled
@@ -117,15 +118,15 @@ export default function TimelineGrid() {
       });
       if (!mounted) return;
 
-      setEquipment(eq);
+  setEquipment(eq as cr2b6_equipments[]);
       setBatches(batches);
       setOperations(ops);
 
       setGroups(
-        eq.map((g) => ({
-          id: g.id,
-          title: g.description,
-          rightTitle: g.tag,
+        eq.map((g: any) => ({
+          id: g.cr2b6_equipmentid,
+          title: g.cr2b6_description,
+          rightTitle: g.cr2b6_tag,
         }))
       );
 
@@ -179,10 +180,10 @@ export default function TimelineGrid() {
     const titleMatch = it.title && String(it.title).toLowerCase().includes(s);
     const descMatch = it.description && String(it.description).toLowerCase().includes(s);
     // find equipment
-    const eq = equipment.find((e) => String(e.id) === String(it.group));
+    const eq = equipment.find((e) => String(e.cr2b6_equipmentid) === String(it.group));
     const equipmentMatch = eq && (
-      String(eq.description).toLowerCase().includes(s) ||
-      String(eq.tag || "").toLowerCase().includes(s)
+      String(eq.cr2b6_description).toLowerCase().includes(s) ||
+      String(eq.cr2b6_tag || "").toLowerCase().includes(s)
     );
     return Boolean(batchMatch || typeMatch || equipmentMatch || titleMatch || descMatch);
   });
@@ -422,10 +423,10 @@ export default function TimelineGrid() {
     console.log("Group ID clicked:", groupId);
     const allEquipment = await dataProvider.getEquipment();
     console.log("All equipment:", allEquipment);
-    const equipment = allEquipment.find((eq) => eq.id === groupId);
+    const equipment = allEquipment.find((eq: any) => eq.cr2b6_equipmentid === groupId);
     console.log("Found equipment:", equipment);
     if (equipment) {
-      setSelectedEquipment(equipment);
+      setSelectedEquipment(equipment as cr2b6_equipments);
       setIsDialogOpen(true);
     }
   };
@@ -439,15 +440,15 @@ export default function TimelineGrid() {
   const refreshEquipment = async () => {
     const eq = await dataProvider.getEquipment();
     setGroups(
-      eq.map((g) => ({
-        id: g.id,
-        title: g.description,
-        rightTitle: g.tag,
+      eq.map((g: any) => ({
+        id: g.cr2b6_equipmentid,
+        title: g.cr2b6_description,
+        rightTitle: g.cr2b6_tag,
       }))
     );
   };
 
-  const handleSaveEquipment = async (equipment: Partial<Equipment>) => {
+  const handleSaveEquipment = async (equipment: Partial<cr2b6_equipments>) => {
     try {
       await dataProvider.saveEquipment(equipment);
       await refreshEquipment();
