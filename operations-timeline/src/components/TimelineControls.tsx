@@ -7,11 +7,22 @@ import {
   makeStyles,
   tokens,
   Input,
+  Menu,
+  MenuTrigger,
+  MenuPopover,
+  MenuList,
+  MenuItem,
+  Toaster,
+  useToastController,
+  useId,
+  Toast,
+  ToastTitle,
 } from "@fluentui/react-components";
 import {
   CalendarLtr24Regular,
   Add24Regular,
   Grid24Regular,
+  MoreHorizontal24Regular,
   ZoomIn24Regular,
   ZoomOut24Regular,
   Search24Regular,
@@ -29,6 +40,8 @@ interface Props {
   onAddEquipment: () => void;
   onAddOperation: () => void;
   onManageBatches: () => void;
+  onExportDb?: () => void | Promise<void>;
+  onImportDb?: (file: File) => void | Promise<void>;
 }
 
 const useStyles = makeStyles({
@@ -43,6 +56,7 @@ const useStyles = makeStyles({
     // allow content to compress on small screens
     maxWidth: "100%",
   },
+  spacer: { flex: 1 },
   search: {
     minWidth: "140px",
     marginRight: tokens.spacingHorizontalS,
@@ -63,8 +77,12 @@ export default function TimelineControls({
   onAddEquipment,
   onAddOperation,
   onManageBatches,
+  onExportDb,
+  onImportDb,
 }: Props) {
   const styles = useStyles();
+  const toasterId = useId("controls-toaster");
+  const { dispatchToast } = useToastController(toasterId);
 
   const zoomOptions = [
     { key: "hour", text: "Hour View" },
@@ -150,6 +168,81 @@ export default function TimelineControls({
       />
 
       <ToolbarDivider />
+
+  {/* right side spacer to push File menu to far right */}
+      <div className={styles.spacer} />
+
+      {/* File menu at far right */}
+      {(onExportDb || onImportDb) && (
+        <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <Button appearance="subtle" icon={<MoreHorizontal24Regular />}>File</Button>
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              {onExportDb && (
+                <MenuItem
+                  onClick={async () => {
+                    try {
+                      await onExportDb();
+                      dispatchToast(
+                        <Toast>
+                          <ToastTitle>Database exported</ToastTitle>
+                        </Toast>,
+                        { intent: "success" }
+                      );
+                    } catch (e) {
+                      dispatchToast(
+                        <Toast>
+                          <ToastTitle>Export failed</ToastTitle>
+                        </Toast>,
+                        { intent: "error" }
+                      );
+                    }
+                  }}
+                >
+                  Export DB
+                </MenuItem>
+              )}
+              {onImportDb && (
+                <MenuItem
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.db,application/octet-stream';
+                    input.onchange = async (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (!file) return;
+                      try {
+                        await onImportDb(file);
+                        dispatchToast(
+                          <Toast>
+                            <ToastTitle>Database imported</ToastTitle>
+                          </Toast>,
+                          { intent: "success" }
+                        );
+                      } catch (err) {
+                        dispatchToast(
+                          <Toast>
+                            <ToastTitle>Import failed</ToastTitle>
+                          </Toast>,
+                          { intent: "error" }
+                        );
+                      }
+                    };
+                    input.click();
+                  }}
+                >
+                  Import DB
+                </MenuItem>
+              )}
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+      )}
+
+        {/* Toaster for confirmations */}
+        <Toaster toasterId={toasterId} />
 
             {/* Edit/View Mode Selector */}
       <Dropdown

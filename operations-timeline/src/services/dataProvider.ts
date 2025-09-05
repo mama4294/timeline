@@ -1,6 +1,7 @@
 import type { Operation } from "../models/types";
 import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
 import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
+import { LocalDb } from "./localDb";
 
 export interface IDataProvider {
   getEquipment(): Promise<cr2b6_equipments[]>;
@@ -12,6 +13,144 @@ export interface IDataProvider {
   deleteOperation(id: string): Promise<void>;
   saveBatch(batch: Partial<cr2b6_batcheses>): Promise<cr2b6_batcheses>;
   deleteBatch(id: string): Promise<void>;
+}
+
+class LocalSqliteDataProvider implements IDataProvider {
+  private async db() {
+    return LocalDb.get();
+  }
+
+  async getEquipment(): Promise<cr2b6_equipments[]> {
+    const rows = (await this.db()).list<any>("cr2b6_equipments");
+    return rows.map((r) => ({
+      ...r,
+      createdon: r.createdon ? new Date(r.createdon) : undefined,
+      modifiedon: r.modifiedon ? new Date(r.modifiedon) : undefined,
+    })) as cr2b6_equipments[];
+  }
+
+  async getBatches(): Promise<cr2b6_batcheses[]> {
+    const rows = (await this.db()).list<any>("cr2b6_batcheses");
+    return rows.map((r) => ({
+      ...r,
+      createdon: r.createdon ? new Date(r.createdon) : undefined,
+      modifiedon: r.modifiedon ? new Date(r.modifiedon) : undefined,
+    })) as cr2b6_batcheses[];
+  }
+
+  async getOperations(startDate: Date, endDate: Date): Promise<Operation[]> {
+    // Simple range overlap query using JS filter for now
+    const rows = (await this.db()).list<any>("cr2b6_operations");
+    const ops: Operation[] = rows.map((r) => ({
+      id: r.cr2b6_operationsid,
+      equipmentId: r.cr2b6_equipmentid,
+      batchId: r.cr2b6_batchid || null,
+      startTime: r.cr2b6_starttime ? new Date(r.cr2b6_starttime) : new Date(),
+      endTime: r.cr2b6_endtime ? new Date(r.cr2b6_endtime) : new Date(),
+      type: r.cr2b6_type || "Production",
+      description: r.cr2b6_description || "",
+      createdOn: r.createdon ? new Date(r.createdon) : new Date(),
+      modifiedOn: r.modifiedon ? new Date(r.modifiedon) : new Date(),
+    }));
+    return ops.filter((op) => op.startTime <= endDate && op.endTime >= startDate);
+  }
+
+  async saveEquipment(equipment: Partial<cr2b6_equipments>): Promise<cr2b6_equipments> {
+    const db = await this.db();
+    const now = new Date();
+    if (!equipment.cr2b6_equipmentid) {
+      equipment.cr2b6_equipmentid = crypto.randomUUID();
+      equipment.createdon = equipment.createdon || now;
+    }
+    equipment.modifiedon = now;
+    const id = equipment.cr2b6_equipmentid;
+    // Upsert
+    const existing = (await this.getEquipment()).find((e) => e.cr2b6_equipmentid === id);
+    const row = {
+      cr2b6_equipmentid: id,
+      cr2b6_tag: equipment.cr2b6_tag || "",
+      cr2b6_description: equipment.cr2b6_description || "",
+      cr2b6_taganddescription: equipment.cr2b6_taganddescription || `${equipment.cr2b6_tag || ''} - ${equipment.cr2b6_description || ''}`,
+      createdon: equipment.createdon || now,
+      modifiedon: equipment.modifiedon || now,
+      ownerid: equipment.ownerid || "system",
+      owneridname: equipment.owneridname || "System",
+      owneridtype: equipment.owneridtype || "systemuser",
+      owneridyominame: equipment.owneridyominame || "",
+      statecode: equipment.statecode || "0",
+    } as any;
+    if (existing) db.update("cr2b6_equipments", "cr2b6_equipmentid", id, row);
+    else db.insert("cr2b6_equipments", row);
+    return row as cr2b6_equipments;
+  }
+
+  async deleteEquipment(_id: string): Promise<void> {
+    // Disabled by policy to mirror Dataverse safety
+    throw new Error("Equipment deletion is disabled. You can create or update equipment but not delete it.");
+  }
+
+  async saveBatch(batch: Partial<cr2b6_batcheses>): Promise<cr2b6_batcheses> {
+    const db = await this.db();
+    const now = new Date();
+    const id = (batch.cr2b6_batchnumber || batch.cr2b6_batchesid || crypto.randomUUID()) as string;
+    const existing = (await this.getBatches()).find((b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === id);
+    const row = {
+      cr2b6_batchesid: batch.cr2b6_batchesid || id,
+      cr2b6_batchnumber: batch.cr2b6_batchnumber || id,
+      createdon: batch.createdon || now,
+      modifiedon: now,
+      ownerid: batch.ownerid || "system",
+      owneridname: batch.owneridname || "System",
+      owneridtype: batch.owneridtype || "systemuser",
+      owneridyominame: batch.owneridyominame || "",
+      statecode: batch.statecode || "0",
+    } as any;
+    if (existing) db.update("cr2b6_batcheses", "cr2b6_batchesid", row.cr2b6_batchesid, row);
+    else db.insert("cr2b6_batcheses", row);
+    return row as cr2b6_batcheses;
+  }
+
+  async deleteBatch(_id: string): Promise<void> {
+    throw new Error("Batch deletion is disabled. You can create or update batches but not delete them.");
+  }
+
+  async saveOperation(operation: Partial<Operation>): Promise<Operation> {
+    const db = await this.db();
+    const now = new Date();
+    const id = operation.id || crypto.randomUUID();
+    const row = {
+      cr2b6_operationsid: id,
+      cr2b6_equipmentid: operation.equipmentId || "",
+      cr2b6_batchid: operation.batchId || null,
+      cr2b6_starttime: (operation.startTime || now).toISOString(),
+      cr2b6_endtime: (operation.endTime || now).toISOString(),
+      cr2b6_type: operation.type || "Production",
+      cr2b6_description: operation.description || "",
+      createdon: now.toISOString(),
+      modifiedon: now.toISOString(),
+      statecode: "0",
+    } as any;
+    const exists = (await this.getOperations(new Date(0), new Date(8640000000000000)))
+      .some((o) => o.id === id);
+    if (exists) db.update("cr2b6_operations", "cr2b6_operationsid", id, row);
+    else db.insert("cr2b6_operations", row);
+    return {
+      id,
+      equipmentId: row.cr2b6_equipmentid,
+      batchId: row.cr2b6_batchid,
+      startTime: new Date(row.cr2b6_starttime),
+      endTime: new Date(row.cr2b6_endtime),
+      type: row.cr2b6_type,
+      description: row.cr2b6_description,
+      createdOn: new Date(row.createdon),
+      modifiedOn: new Date(row.modifiedon),
+    } as Operation;
+  }
+
+  async deleteOperation(id: string): Promise<void> {
+    const db = await this.db();
+    db.delete("cr2b6_operations", "cr2b6_operationsid", id);
+  }
 }
 
 class MockDataProvider implements IDataProvider {
@@ -592,4 +731,8 @@ class MockDataProvider implements IDataProvider {
   }
 }
 
-export const dataProvider = new MockDataProvider();
+// Provider switch: use local SQLite by default for dev, keeping easy reconnection to Dataverse later
+const useLocal = (import.meta as any).env?.VITE_DATA_MODE !== 'remote';
+export const dataProvider: IDataProvider = useLocal
+  ? new LocalSqliteDataProvider()
+  : new MockDataProvider();

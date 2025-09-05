@@ -19,6 +19,7 @@ import { OperationDialog } from "./OperationDialog";
 import { ContextMenu } from "./ContextMenu";
 import { DuplicateOperationsDialog } from "./DuplicateOperationsDialog";
 import { BatchManagement } from "./BatchManagement";
+import { LocalDb } from "../services/localDb";
 import type { Operation } from "../models/types";
 import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
 import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
@@ -830,6 +831,32 @@ export default function TimelineGrid() {
           onAddEquipment={handleNewEquipment}
           onAddOperation={handleNewOperation}
           onManageBatches={handleManageBatches}
+          onExportDb={async () => {
+            const db = await LocalDb.get();
+            const bytes = db.exportBytes();
+            const ab = new ArrayBuffer(bytes.byteLength);
+            new Uint8Array(ab).set(bytes);
+            const blob = new Blob([ab], { type: 'application/octet-stream' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'database.db';
+            a.click();
+            URL.revokeObjectURL(a.href);
+          }}
+          onImportDb={async (file) => {
+            const buf = await file.arrayBuffer();
+            const db = await LocalDb.get();
+            db.importBytes(new Uint8Array(buf));
+            // Optional: force a data refresh after import
+            const [eq, ops, batches] = await Promise.all([
+              dataProvider.getEquipment(),
+              dataProvider.getOperations(startDate, endDate),
+              dataProvider.getBatches(),
+            ]);
+            setEquipment(eq);
+            setBatches(batches);
+            setOperations(ops);
+          }}
         />
       </div>
 
@@ -882,12 +909,10 @@ export default function TimelineGrid() {
           dragSnap={30 * 60 * 1000}
           lineHeight={40}
           itemRenderer={({ item, getItemProps, getResizeProps }) => {
-            const { left: leftResizeProps, right: rightResizeProps } =
-              getResizeProps();
             const isSelected = selectedItems.has(item.id);
             const canResize = selectedItems.size <= 1;
 
-            const itemProps = getItemProps({
+            const itemPropsRaw = getItemProps({
               onClick: (e: React.MouseEvent) => {
                 handleItemSelect(item.id, e);
               },
@@ -917,10 +942,14 @@ export default function TimelineGrid() {
                     "0 1px 2px rgba(0, 0, 0, 0.1)",
               },
             });
+            const { key: itemKey, ...itemProps } = (itemPropsRaw as any) ?? {};
+            const { left: leftResizePropsRaw, right: rightResizePropsRaw } = getResizeProps();
+            const { key: leftKey, ...leftResizeProps } = (leftResizePropsRaw as any) ?? {};
+            const { key: rightKey, ...rightResizeProps } = (rightResizePropsRaw as any) ?? {};
 
             return (
-              <div {...itemProps} data-selected={isSelected}>
-                {canResize && <div {...leftResizeProps} />}
+              <div key={String(itemKey ?? item.id)} {...itemProps} data-selected={isSelected}>
+                {canResize && <div key={leftKey} {...leftResizeProps} />}
                 <Tooltip
                   content={`${item.description}${
                     item.batchId ? ` (Batch: ${item.batchId})` : ""
@@ -952,7 +981,7 @@ export default function TimelineGrid() {
                     </div>
                   </div>
                 </Tooltip>
-                {canResize && <div {...rightResizeProps} />}
+                {canResize && <div key={rightKey} {...rightResizeProps} />}
               </div>
             );
           }}
@@ -999,9 +1028,12 @@ export default function TimelineGrid() {
           <TimelineHeaders>
             <SidebarHeader>
               {({ getRootProps }) => {
+                const rootPropsAll = getRootProps();
+                const { key: rootKey, ...rootProps } = (rootPropsAll as any) ?? {};
                 return (
                   <div
-                    {...getRootProps()}
+                    key={rootKey}
+                    {...rootProps}
                     style={{
                       backgroundColor: "#f8f8f8",
                       padding: "8px 10px",
