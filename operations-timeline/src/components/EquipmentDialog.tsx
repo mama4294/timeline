@@ -78,8 +78,27 @@ export const EquipmentDialog: React.FC<EquipmentDialogProps> = ({
     setFormData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
+  const resetForm = () => {
+    setFormData({
+      cr2b6_tag: "",
+      cr2b6_description: "",
+      owningbusinessunitname: "Default BU",
+      ownerid: "system",
+      owneridname: "System",
+      owneridtype: "systemuser",
+      owneridyominame: "",
+      createdbyyominame: "",
+      createdonbehalfbyyominame: "",
+      modifiedbyyominame: "",
+      modifiedonbehalfbyyominame: "",
+      statecode: "0",
+    });
+  };
+
   const handleSave = useCallback(() => {
     onSave(formData);
+    // After save, always clear form so a new Add starts blank
+    resetForm();
     const syntheticEvent = {
       preventDefault: () => {},
       stopPropagation: () => {},

@@ -599,6 +599,8 @@ export default function TimelineGrid() {
     try {
       await dataProvider.saveEquipment(equipment);
       await refreshEquipment();
+  // Clear any selected equipment so next Add starts fresh
+  setSelectedEquipment(undefined);
     } catch (error) {
       console.error("Failed to save equipment:", error);
       // TODO: Show error message to user
