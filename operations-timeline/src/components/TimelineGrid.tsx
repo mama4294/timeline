@@ -1,4 +1,8 @@
 import { useEffect, useState, useRef } from "react";
+
+// Constants for virtual scrolling sizing
+const GROUP_LINE_HEIGHT = 40; // must match timeline lineHeight
+const ITEM_HEIGHT_RATIO = 0.9; // tuned for visual vertical centering
 import { Tooltip } from "@fluentui/react-components";
 import Timeline, {
   TimelineMarkers,
@@ -183,6 +187,13 @@ export default function TimelineGrid() {
   // Batch management state
   const [isBatchManagementOpen, setIsBatchManagementOpen] = useState(false);
 
+  // Virtual group windowing (Option 3)
+  const [groupOffset, setGroupOffset] = useState(0); // starting index in groups array
+  const [groupsPerPage, setGroupsPerPage] = useState(30); // dynamic later
+  const scrollAccumRef = useRef(0);
+  const dragRef = useRef<{ startY: number; startOffset: number; dragging: boolean }>({ startY: 0, startOffset: 0, dragging: false });
+  const timelineOuterRef = useRef<HTMLDivElement | null>(null);
+
   // Helper function to create timeline items from operations
   const createTimelineItem = (operation: Operation) => {
     const batch = batches.find(
@@ -272,6 +283,40 @@ export default function TimelineGrid() {
     };
   }, [startDate, endDate]);
 
+  // Recalculate groupsPerPage based on container height & lineHeight (40) when size changes
+  useEffect(() => {
+    const el = timelineOuterRef.current;
+    if (!el) return;
+    const compute = () => {
+      // Total inner height excluding vertical padding (we set padding:12px top/bottom)
+      const paddingV = 24; // 12 top + 12 bottom
+      const total = el.clientHeight - paddingV;
+      // Try to detect header height after render
+      const headerEl = el.querySelector('.rct-header-root') as HTMLElement | null;
+      const headerH = headerEl ? headerEl.getBoundingClientRect().height : 60;
+      const usable = Math.max(0, total - headerH - 4); // small buffer
+      let per = Math.max(3, Math.floor(usable / GROUP_LINE_HEIGHT));
+      // Guard: ensure we don't over-fill causing last row clipping
+      while (per > 3 && (per * GROUP_LINE_HEIGHT + headerH) > (total + 1)) {
+        per -= 1;
+      }
+      setGroupsPerPage(per);
+    };
+    const resizeObserver = new ResizeObserver(() => compute());
+    resizeObserver.observe(el);
+    // Run after initial paint (header may not exist yet)
+    setTimeout(compute, 0);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Clamp offset when groups change
+  useEffect(() => {
+    setGroupOffset((prev) => {
+      const maxStart = Math.max(0, groups.length - groupsPerPage);
+      return Math.min(prev, maxStart);
+    });
+  }, [groups, groupsPerPage]);
+
   const visibleTimeStart = moment(startDate).valueOf();
   const visibleTimeEnd = moment(endDate).valueOf();
 
@@ -300,8 +345,8 @@ export default function TimelineGrid() {
     );
   });
 
-  // When in view mode, only display groups that have at least one displayed item visible in the current range
-  let displayedGroups = editMode
+  // Filter groups (view mode lazily filters empty groups in time window)
+  const filteredGroups = editMode
     ? groups
     : groups.filter((g) =>
         displayedItems.some((it) => {
@@ -312,6 +357,18 @@ export default function TimelineGrid() {
           return itemEnd >= visibleTimeStart && itemStart <= visibleTimeEnd;
         })
       );
+
+  // Apply virtual window
+  const maxStart = Math.max(0, filteredGroups.length - groupsPerPage);
+  const clampedOffset = Math.min(groupOffset, maxStart);
+  let displayedGroups = filteredGroups.slice(
+    clampedOffset,
+    clampedOffset + groupsPerPage
+  );
+
+  // Further constrain displayed items to those in visible group window
+  const visibleGroupIds = new Set(displayedGroups.map((g) => String(g.id)));
+  displayedItems = displayedItems.filter((it) => visibleGroupIds.has(String(it.group)));
 
   // Inject placeholder if no items to display
   if (displayedItems.length === 0) {
@@ -989,19 +1046,80 @@ export default function TimelineGrid() {
         />
       </div>
 
-      {/* Timeline Container */}
-      <div
+      {/* Timeline Container (reverted wrapper, rely on component scroll) */}
+    <div
         style={{
           backgroundColor: "white",
           borderRadius: "8px",
           boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
           padding: "12px",
           flex: 1,
-          minHeight: "0", // Important for nested flex containers
-          overflow: "hidden", // Contains the timeline's scroll
+          minHeight: 0,
+          overflow: 'hidden',
+          display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
+      overscrollBehavior: 'contain',
+      touchAction: 'none'
+        }}
+        ref={timelineOuterRef}
+        onWheel={(e) => {
+          // Always prevent page scroll while over timeline area
+          e.preventDefault();
+          if (filteredGroups.length <= groupsPerPage) return; // nothing to virtual-scroll
+          // accumulate delta so small wheel ticks move eventually
+          scrollAccumRef.current += e.deltaY;
+          const threshold = 30; // pixels per group scroll
+          while (Math.abs(scrollAccumRef.current) >= threshold) {
+            const dir = scrollAccumRef.current > 0 ? 1 : -1;
+            scrollAccumRef.current -= dir * threshold;
+            setGroupOffset((prev) => {
+              const max = Math.max(0, filteredGroups.length - groupsPerPage);
+              return Math.min(Math.max(prev + dir, 0), max);
+            });
+          }
+        }}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return; // left only for drag
+          dragRef.current = { startY: e.clientY, startOffset: clampedOffset, dragging: true };
+          (e.target as HTMLElement).setPointerCapture(e.pointerId);
+        }}
+        onPointerMove={(e) => {
+          if (!dragRef.current.dragging) return;
+          const dy = e.clientY - dragRef.current.startY;
+          const groupsDelta = Math.round(-dy / GROUP_LINE_HEIGHT); // inverse to natural scroll
+          setGroupOffset(() => {
+            const base = dragRef.current.startOffset + groupsDelta;
+            const max = Math.max(0, filteredGroups.length - groupsPerPage);
+            return Math.min(Math.max(base, 0), max);
+          });
+        }}
+        onPointerUp={(e) => {
+          if (!dragRef.current.dragging) return;
+          dragRef.current.dragging = false;
+          (e.target as HTMLElement).releasePointerCapture(e.pointerId);
         }}
       >
-        <Timeline
+        {/* Virtual window status overlay */}
+        {filteredGroups.length > groupsPerPage && (
+          <div
+            style={{
+              position: 'absolute',
+              right: 16,
+              top: 16,
+              background: 'rgba(0,0,0,0.45)',
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: 4,
+              fontSize: 12,
+              zIndex: 10,
+              pointerEvents: 'none'
+            }}
+          >
+            {clampedOffset + 1}-{Math.min(clampedOffset + groupsPerPage, filteredGroups.length)} / {filteredGroups.length}
+          </div>
+        )}
+  <Timeline
           groups={displayedGroups}
           items={displayedItems}
           visibleTimeStart={visibleTimeStart}
@@ -1036,12 +1154,13 @@ export default function TimelineGrid() {
           }}
           stackItems={true}
           dragSnap={30 * 60 * 1000}
-          lineHeight={40}
+          lineHeight={GROUP_LINE_HEIGHT}
+          itemHeightRatio={ITEM_HEIGHT_RATIO}
           itemRenderer={({ item, getItemProps, getResizeProps }) => {
             const isSelected = selectedItems.has(item.id);
             const canResize = selectedItems.size <= 1;
 
-            const itemPropsRaw = getItemProps({
+      const itemPropsRaw = getItemProps({
               onClick: (e: React.MouseEvent) => {
                 handleItemSelect(item.id, e);
               },
@@ -1062,8 +1181,13 @@ export default function TimelineGrid() {
               },
               style: {
                 ...item.itemProps?.style,
-                cursor: canResize ? "pointer" : "move",
-                userSelect: "none",
+        cursor: canResize ? "pointer" : "move",
+        userSelect: "none",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        paddingTop: 0,
+        paddingBottom: 0,
                 border: isSelected ? "2px solid #0078d4" : "none",
                 boxShadow: isSelected
                   ? "0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15)"
@@ -1080,30 +1204,28 @@ export default function TimelineGrid() {
               <div key={String(itemKey ?? item.id)} {...itemProps} data-selected={isSelected}>
                 {canResize && <div key={leftKey} {...leftResizeProps} />}
                 <Tooltip
-                  content={`${item.description}${
-                    item.batchId ? ` (Batch: ${item.batchId})` : ""
-                  }`}
+                  content={`${item.description}${item.batchId ? ` (Batch: ${item.batchId})` : ""}`}
                   relationship="description"
                 >
                   <div
                     style={{
-                      height: "100%",
-                      position: "relative",
+                      height: '100%',
+                      position: 'relative',
                       paddingLeft: 4,
                       paddingRight: 4,
-                      display: "flex",
-                      alignItems: "center",
-                      overflow: "hidden",
+                      display: 'flex',
+                      alignItems: 'center',
+                      overflow: 'hidden'
                     }}
                   >
                     <div
                       style={{
-                        fontSize: "12px",
-                        color: "white",
-                        fontWeight: "500",
-                        textOverflow: "ellipsis",
-                        overflow: "hidden",
-                        whiteSpace: "nowrap",
+                        fontSize: '12px',
+                        color: 'white',
+                        fontWeight: 500,
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap'
                       }}
                     >
                       {item.title}
@@ -1197,7 +1319,7 @@ export default function TimelineGrid() {
               )}
             </TodayMarker>
           </TimelineMarkers>
-        </Timeline>
+  </Timeline>
       </div>
 
       {/* Context Menu */}
