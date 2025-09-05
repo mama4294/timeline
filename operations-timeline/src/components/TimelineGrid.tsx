@@ -50,6 +50,13 @@ export default function TimelineGrid() {
   const [equipment, setEquipment] = useState<cr2b6_equipments[]>([]);
   const [batches, setBatches] = useState<cr2b6_batcheses[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
+  // History stacks for undo/redo of operations
+  const undoStackRef = useRef<Operation[][]>([]);
+  const redoStackRef = useRef<Operation[][]>([]);
+  const isApplyingHistoryRef = useRef<boolean>(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  const operationsRef = useRef<Operation[]>([]);
   // Edit mode state: when false, editing actions are disabled
   const [editMode, setEditMode] = useState<boolean>(false);
   // Search term for filtering
@@ -62,6 +69,97 @@ export default function TimelineGrid() {
 
   // Ref for debouncing drag saves
   const dragSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helpers for history
+  const snapshotOps = (ops: Operation[] = operations) =>
+    ops.map((o) => ({ ...o }));
+
+  const updateHistoryStateFlags = () => {
+    setCanUndo(undoStackRef.current.length > 0);
+    setCanRedo(redoStackRef.current.length > 0);
+  };
+
+  const pushHistory = () => {
+    if (isApplyingHistoryRef.current) return;
+    undoStackRef.current.push(snapshotOps());
+    if (undoStackRef.current.length > 50) undoStackRef.current.shift();
+    // clear redo stack on new action
+    redoStackRef.current = [];
+    updateHistoryStateFlags();
+  };
+
+  const rebuildItems = (ops: Operation[]) => {
+    setItems(ops.map((o) => createTimelineItem(o)));
+  };
+
+  const persistFromTo = async (oldOps: Operation[], newOps: Operation[]) => {
+    const oldById = new Map(oldOps.map((o) => [String(o.id), o]));
+    const newById = new Map(newOps.map((o) => [String(o.id), o]));
+
+    // Deletes
+    const toDelete = [...oldById.keys()].filter((id) => !newById.has(id));
+    // Upserts
+    const toUpsert = newOps;
+
+    await Promise.all([
+      ...toDelete.map((id) => dataProvider.deleteOperation(id)),
+      ...toUpsert.map((op) => dataProvider.saveOperation(op)),
+    ]);
+  };
+
+  const applyOpsFromHistory = async (targetOps: Operation[]) => {
+    const prev = operations;
+    isApplyingHistoryRef.current = true;
+    setOperations(snapshotOps(targetOps));
+    rebuildItems(targetOps);
+    isApplyingHistoryRef.current = false;
+    try {
+      await persistFromTo(prev, targetOps);
+    } catch (e) {
+      console.error("Failed to sync operations during undo/redo", e);
+    }
+  };
+
+  // Keep a ref of current operations for keyboard handlers
+  useEffect(() => {
+    operationsRef.current = snapshotOps(operations);
+  }, [operations]);
+
+  // Keyboard shortcuts: Ctrl/Cmd+Z (undo), Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z (redo)
+  useEffect(() => {
+    if (!editMode) return;
+    const onKeyDown = async (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const isEditable = target?.isContentEditable;
+      if (tag === "INPUT" || tag === "TEXTAREA" || isEditable) return;
+
+      const ctrlOrMeta = e.ctrlKey || e.metaKey;
+      if (!ctrlOrMeta) return;
+
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        // Undo
+        e.preventDefault();
+        if (undoStackRef.current.length === 0) return;
+        const prevState = undoStackRef.current.pop()!;
+        redoStackRef.current.push(snapshotOps(operationsRef.current));
+        await applyOpsFromHistory(prevState);
+        updateHistoryStateFlags();
+      } else if (key === "y" || (key === "z" && e.shiftKey)) {
+        // Redo
+        e.preventDefault();
+        if (redoStackRef.current.length === 0) return;
+        const nextState = redoStackRef.current.pop()!;
+        undoStackRef.current.push(snapshotOps(operationsRef.current));
+        await applyOpsFromHistory(nextState);
+        updateHistoryStateFlags();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [editMode]);
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
@@ -290,6 +388,8 @@ export default function TimelineGrid() {
       clearTimeout(dragSaveTimeoutRef.current);
     }
     dragSaveTimeoutRef.current = setTimeout(async () => {
+      // record history once per move commit
+      pushHistory();
       // Update operations state and save to backend
       const updatePromises = [];
 
@@ -370,7 +470,8 @@ export default function TimelineGrid() {
     });
     setItems(newItems);
 
-    // Update operations state
+  // Update operations state
+  pushHistory();
     setOperations((prev) =>
       prev.map((op) => {
         if (op.id === itemId) {
@@ -420,7 +521,7 @@ export default function TimelineGrid() {
     }
 
     // Handle delete functionality for keyboard
-    const handleDelete = async (e: KeyboardEvent) => {
+  const handleDelete = async (e: KeyboardEvent) => {
       if (e.key === "Delete" || e.key === "Backspace") {
         if (!editMode) {
           console.log("Delete disabled in View Mode");
@@ -429,6 +530,7 @@ export default function TimelineGrid() {
 
         // Delete all selected items
         const itemsToDelete = Array.from(selectedItems);
+    if (itemsToDelete.length > 0) pushHistory();
 
         for (const selectedItemId of itemsToDelete) {
           const operationToDelete = operations.find(
@@ -544,6 +646,8 @@ export default function TimelineGrid() {
 
   const handleSaveOperation = async (operation: Partial<Operation>) => {
     try {
+  // snapshot before change
+  pushHistory();
       const saved = await dataProvider.saveOperation(operation);
 
       // Update operations state
@@ -576,6 +680,7 @@ export default function TimelineGrid() {
   const handleDeleteOperation = async () => {
     if (selectedOperation) {
       try {
+  pushHistory();
         await dataProvider.deleteOperation(selectedOperation.id);
 
         // Remove from operations state
@@ -749,6 +854,8 @@ export default function TimelineGrid() {
 
   const handleDuplicateOperations = async (batchId: string | null) => {
     try {
+  // snapshot before duplicating
+  pushHistory();
       const duplicatedOperations: Operation[] = [];
 
       for (const operationId of operationsToDuplicate) {
@@ -856,7 +963,27 @@ export default function TimelineGrid() {
             setEquipment(eq);
             setBatches(batches);
             setOperations(ops);
+            // reset history after import
+            undoStackRef.current = [];
+            redoStackRef.current = [];
+            updateHistoryStateFlags();
           }}
+          onUndo={async () => {
+            if (undoStackRef.current.length === 0) return;
+            const target = undoStackRef.current.pop()!;
+            redoStackRef.current.push(snapshotOps());
+            await applyOpsFromHistory(target);
+            updateHistoryStateFlags();
+          }}
+          onRedo={async () => {
+            if (redoStackRef.current.length === 0) return;
+            const target = redoStackRef.current.pop()!;
+            undoStackRef.current.push(snapshotOps());
+            await applyOpsFromHistory(target);
+            updateHistoryStateFlags();
+          }}
+          canUndo={canUndo}
+          canRedo={canRedo}
         />
       </div>
 

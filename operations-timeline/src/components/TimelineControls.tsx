@@ -26,6 +26,8 @@ import {
   ZoomIn24Regular,
   ZoomOut24Regular,
   Search24Regular,
+  ArrowCounterclockwise24Regular,
+  ArrowClockwise24Regular,
 } from "@fluentui/react-icons";
 import { ZoomLevel } from "../hooks/useViewport";
 
@@ -42,6 +44,10 @@ interface Props {
   onManageBatches: () => void;
   onExportDb?: () => void | Promise<void>;
   onImportDb?: (file: File) => void | Promise<void>;
+  onUndo?: () => void | Promise<void>;
+  onRedo?: () => void | Promise<void>;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 const useStyles = makeStyles({
@@ -79,6 +85,10 @@ export default function TimelineControls({
   onManageBatches,
   onExportDb,
   onImportDb,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }: Props) {
   const styles = useStyles();
   const toasterId = useId("controls-toaster");
@@ -241,8 +251,8 @@ export default function TimelineControls({
         </Menu>
       )}
 
-        {/* Toaster for confirmations */}
-        <Toaster toasterId={toasterId} />
+    {/* Toaster for confirmations */}
+    <Toaster toasterId={toasterId} />
 
             {/* Edit/View Mode Selector */}
       <Dropdown
@@ -262,6 +272,28 @@ export default function TimelineControls({
 
       {editMode && (
         <>
+          {/* Undo / Redo */}
+          {(onUndo || onRedo) && (
+            <>
+              <Button
+                appearance="subtle"
+                icon={<ArrowCounterclockwise24Regular />}
+                onClick={() => onUndo && onUndo()}
+                disabled={!canUndo}
+              >
+                Undo
+              </Button>
+              <Button
+                appearance="subtle"
+                icon={<ArrowClockwise24Regular />}
+                onClick={() => onRedo && onRedo()}
+                disabled={!canRedo}
+              >
+                Redo
+              </Button>
+              <ToolbarDivider />
+            </>
+          )}
 
           <Button
             appearance="subtle"
