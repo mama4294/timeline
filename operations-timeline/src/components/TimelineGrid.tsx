@@ -70,6 +70,11 @@ export default function TimelineGrid() {
   const [selectedItems, setSelectedItems] = useState<Set<string | number>>(
     new Set()
   );
+  // Ref mirrors selectedItems to avoid stale closures in key handlers
+  const selectedItemsRef = useRef<Set<string | number>>(new Set());
+  useEffect(() => {
+    selectedItemsRef.current = selectedItems;
+  }, [selectedItems]);
 
   // Ref for debouncing drag saves
   const dragSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -576,49 +581,33 @@ export default function TimelineGrid() {
       // Single select - clear others and select this one
       setSelectedItems(new Set([itemId]));
     }
+  };
 
-    // Handle delete functionality for keyboard
-  const handleDelete = async (e: KeyboardEvent) => {
-      if (e.key === "Delete" || e.key === "Backspace") {
-        if (!editMode) {
-          console.log("Delete disabled in View Mode");
-          return;
-        }
-
-        // Delete all selected items
-        const itemsToDelete = Array.from(selectedItems);
-    if (itemsToDelete.length > 0) pushHistory();
-
-        for (const selectedItemId of itemsToDelete) {
-          const operationToDelete = operations.find(
-            (op) => op.id === String(selectedItemId)
-          );
-          if (operationToDelete) {
-            try {
-              await dataProvider.deleteOperation(operationToDelete.id);
-
-              // Remove from operations state
-              setOperations((prev) =>
-                prev.filter((op) => op.id !== operationToDelete.id)
-              );
-
-              // Remove from timeline items
-              setItems((prev) =>
-                prev.filter((item) => item.id !== operationToDelete.id)
-              );
-            } catch (error) {
-              console.error("Failed to delete operation:", error);
-            }
+  // Global Delete key handler (avoids per-selection listener & stale state)
+  useEffect(() => {
+    const handleKey = async (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      if (!editMode) return;
+      const ids = Array.from(selectedItemsRef.current);
+      if (ids.length === 0) return;
+      pushHistory();
+      for (const id of ids) {
+        const op = operations.find(o => o.id === String(id));
+        if (op) {
+          try {
+            await dataProvider.deleteOperation(op.id);
+            setOperations(prev => prev.filter(p => p.id !== op.id));
+            setItems(prev => prev.filter(i => i.id !== op.id));
+          } catch (err) {
+            console.error('Failed to delete operation', err);
           }
         }
-
-        // Clear selection after deletion
-        setSelectedItems(new Set());
-        window.removeEventListener("keydown", handleDelete);
       }
+      setSelectedItems(new Set());
     };
-    window.addEventListener("keydown", handleDelete);
-  };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [editMode, operations]);
 
   const handleEditEquipment = async (groupId: string) => {
     if (!editMode) return; // Editing equipment not allowed in view mode
@@ -1133,6 +1122,10 @@ export default function TimelineGrid() {
           onItemMove={handleItemMove}
           onItemResize={handleItemResize}
           onItemSelect={handleItemSelect}
+          onCanvasClick={() => {
+            // Clicking empty space clears selection
+            if (selectedItemsRef.current.size) setSelectedItems(new Set());
+          }}
           onCanvasDoubleClick={(groupId: any, time: number) => {
             if (!editMode) return;
             // groupId should be the equipment id
