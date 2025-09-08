@@ -941,6 +941,13 @@ export default function TimelineGrid() {
       }
 
       console.log(`Duplicated ${duplicatedOperations.length} operations`);
+      // After duplication, replace the current selection with the newly created operations
+      if (duplicatedOperations.length) {
+        const newIds = new Set<string | number>(duplicatedOperations.map(op => op.id));
+        setSelectedItems(newIds);
+      }
+      // Clear the queued operations to duplicate
+      setOperationsToDuplicate([]);
     } catch (error) {
       console.error("Error duplicating operations:", error);
     }
@@ -1070,6 +1077,10 @@ export default function TimelineGrid() {
         }}
         onPointerDown={(e) => {
           if (e.button !== 0) return; // left only for drag
+          // If the pointer down started on an actual timeline item, don't initiate vertical group drag.
+          // This allows immediate horizontal dragging of operations (e.g., right after duplication).
+          const target = e.target as HTMLElement;
+          if (target.closest('.rct-item')) return;
           dragRef.current = { startY: e.clientY, startOffset: clampedOffset, dragging: true };
           (e.target as HTMLElement).setPointerCapture(e.pointerId);
         }}
