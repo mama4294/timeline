@@ -313,18 +313,18 @@ export default function TimelineGrid() {
     const el = timelineOuterRef.current;
     if (!el) return;
     const compute = () => {
-      // Total inner height excluding vertical padding (we set padding:12px top/bottom)
-      const paddingV = 24; // 12 top + 12 bottom
-      const total = el.clientHeight - paddingV;
-      // Try to detect header height after render
+      // Use current computed padding from style (we minimized padding earlier)
+      const style = getComputedStyle(el);
+      const paddingTop = parseFloat(style.paddingTop) || 0;
+      const paddingBottom = parseFloat(style.paddingBottom) || 0;
+      const total = el.clientHeight - paddingTop - paddingBottom;
       const headerEl = el.querySelector('.rct-header-root') as HTMLElement | null;
-      const headerH = headerEl ? headerEl.getBoundingClientRect().height : 60;
-      const usable = Math.max(0, total - headerH - 4); // small buffer
-      let per = Math.max(3, Math.floor(usable / GROUP_LINE_HEIGHT));
-      // Guard: ensure we don't over-fill causing last row clipping
-      while (per > 3 && (per * GROUP_LINE_HEIGHT + headerH) > (total + 1)) {
-        per -= 1;
-      }
+      const headerH = headerEl ? headerEl.getBoundingClientRect().height : 48;
+      // Available vertical space for rows
+      const usable = Math.max(0, total - headerH);
+      // Allow an extra row if there's > 70% of a row free
+      const raw = usable / GROUP_LINE_HEIGHT;
+      let per = Math.max(3, Math.floor(raw + (raw % 1 > 0.7 ? 1 : 0)));
       setGroupsPerPage(per);
     };
     const resizeObserver = new ResizeObserver(() => compute());
@@ -1000,17 +1000,17 @@ export default function TimelineGrid() {
         flexDirection: "column",
         minHeight: "0", // Important for nested flex containers
         overflow: "hidden", // Prevent double scrollbars
-        gap: "12px", // Space between controls and timeline
-        padding: "12px", // Padding around the entire component
+  gap: "8px", // Space between controls and timeline
+  padding: "8px 8px 10px 8px", // Slightly tighter padding
       }}
     >
       {/* Command Bar Container */}
       <div
         style={{
           backgroundColor: "white",
-          borderRadius: "8px",
-          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-          padding: "12px",
+          borderRadius: "6px",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
+          padding: "8px 10px",
         }}
       >
         <TimelineControls
@@ -1077,17 +1077,17 @@ export default function TimelineGrid() {
     <div
         style={{
           backgroundColor: "white",
-          borderRadius: "8px",
-          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-          padding: "12px",
+          borderRadius: "6px",
+          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
+          padding: "6px 8px 4px 8px",
           flex: 1,
           minHeight: 0,
           overflow: 'hidden',
           display: 'flex',
-      flexDirection: 'column',
-      position: 'relative',
-      overscrollBehavior: 'contain',
-      touchAction: 'none'
+          flexDirection: 'column',
+          position: 'relative',
+          overscrollBehavior: 'contain',
+          touchAction: 'none'
         }}
         ref={timelineOuterRef}
         onWheel={(e) => {
@@ -1131,25 +1131,7 @@ export default function TimelineGrid() {
           (e.target as HTMLElement).releasePointerCapture(e.pointerId);
         }}
       >
-        {/* Virtual window status overlay */}
-        {filteredGroups.length > groupsPerPage && (
-          <div
-            style={{
-              position: 'absolute',
-              right: 16,
-              top: 16,
-              background: 'rgba(0,0,0,0.45)',
-              color: 'white',
-              padding: '4px 8px',
-              borderRadius: 4,
-              fontSize: 12,
-              zIndex: 10,
-              pointerEvents: 'none'
-            }}
-          >
-            {clampedOffset + 1}-{Math.min(clampedOffset + groupsPerPage, filteredGroups.length)} / {filteredGroups.length}
-          </div>
-        )}
+  {/* Removed virtual window status overlay as requested */}
   <Timeline
           groups={displayedGroups}
           items={displayedItems}

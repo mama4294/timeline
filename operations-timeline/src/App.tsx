@@ -10,15 +10,16 @@ function App() {
     >
       <div
         style={{
-          padding: "16px",
+          padding: "8px 12px 8px 12px",
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          gap: "12px",
-          minHeight: "0", // Important for nested flex containers
+          gap: "8px",
+          minHeight: "0",
+          boxSizing: 'border-box'
         }}
       >
-        <h1 style={{ margin: 0, color: "#323130" }}>Operations Timeline</h1>
+        <h1 style={{ margin: 0, color: "#323130", fontSize: '1.3rem', lineHeight: 1.2, paddingLeft: "12px" }}>Operations Timeline</h1>
         <TimelineGrid />
       </div>
     </FluentProvider>
