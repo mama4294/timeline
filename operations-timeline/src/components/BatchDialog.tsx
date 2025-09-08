@@ -12,7 +12,7 @@ import {
   Input,
 } from "@fluentui/react-components";
 import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
-import { getBatchColor } from "../services/batchColor";
+// Color is auto-generated elsewhere (getBatchColor); manual selection removed.
 
 interface BatchDialogProps {
   batch?: cr2b6_batcheses;
@@ -28,16 +28,14 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
   onSave,
 }) => {
   const [batchId, setBatchId] = useState("");
-  const [color, setColor] = useState("#0078d4");
+  // Color state removed – color is derived automatically.
 
   useEffect(() => {
     if (open) {
       if (batch) {
-        setBatchId(batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid ?? "");
-        setColor(getBatchColor(batch) ?? "#0078d4");
+  setBatchId(batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid ?? "");
       } else {
-        setBatchId("");
-        setColor("#0078d4");
+  setBatchId("");
       }
     }
   }, [batch, open]);
@@ -81,48 +79,7 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
                 />
               </Field>
 
-              <Field label="Color:">
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
-                >
-                  <div
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      backgroundColor: color,
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => {
-                      // Simple color picker - cycle through predefined colors
-                      const colors = [
-                        "#0078d4",
-                        "#107c10",
-                        "#d13438",
-                        "#ff8c00",
-                        "#5c2d91",
-                        "#0099bc",
-                        "#e3008c",
-                        "#00bcf2",
-                        "#bad80a",
-                        "#00b7c3",
-                        "#8764b8",
-                        "#00cc6a",
-                      ];
-                      const currentIndex = colors.indexOf(color);
-                      const nextIndex = (currentIndex + 1) % colors.length;
-                      setColor(colors[nextIndex]);
-                    }}
-                  />
-                  <Input
-                    value={color}
-                    onChange={(_, data) => setColor(data.value)}
-                    placeholder="#0078d4"
-                    style={{ width: "100px" }}
-                  />
-                </div>
-              </Field>
+              {/* Color input removed: color is computed automatically */}
             </div>
           </DialogContent>
           <DialogActions>

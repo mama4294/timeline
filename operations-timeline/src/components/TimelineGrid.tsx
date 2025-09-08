@@ -32,6 +32,20 @@ import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel
 // Helper: ensure each equipment has an order field we can sort & mutate
 interface OrderedEquipment extends cr2b6_equipments { __order?: number }
 
+// Helper to alphabetically sort batches by batch number (case-insensitive),
+// falling back to the primary key if batch number missing. Stable for equal keys.
+const sortBatches = (list: cr2b6_batcheses[]) => {
+  return list
+    .slice()
+    .sort((a, b) => {
+      const aKey = (a.cr2b6_batchnumber || a.cr2b6_batchesid || "").toLowerCase();
+      const bKey = (b.cr2b6_batchnumber || b.cr2b6_batchesid || "").toLowerCase();
+      if (aKey < bKey) return  -1;
+      if (aKey > bKey) return  1;
+      return 0;
+    });
+};
+
 export default function TimelineGrid() {
   const {
     zoom,
@@ -258,7 +272,7 @@ export default function TimelineGrid() {
   const withOrder: OrderedEquipment[] = (eq as cr2b6_equipments[]).map((e, i) => ({ ...e, __order: (e as any).cr2b6_order ?? i }));
   withOrder.sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0));
   setEquipment(withOrder);
-      setBatches(batches);
+  setBatches(sortBatches(batches));
       setOperations(ops);
 
       const orderedForGroups = withOrder.slice().sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0));
@@ -800,15 +814,17 @@ export default function TimelineGrid() {
       ) {
         // Update existing batch
         setBatches((prev) =>
-          prev.map((batch) =>
-            (batch.cr2b6_batchnumber || batch.cr2b6_batchesid) === savedKey
-              ? savedBatch
-              : batch
+          sortBatches(
+            prev.map((batch) =>
+              (batch.cr2b6_batchnumber || batch.cr2b6_batchesid) === savedKey
+                ? savedBatch
+                : batch
+            )
           )
         );
       } else {
-        // Add new batch
-        setBatches((prev) => [...prev, savedBatch]);
+        // Add new batch (keep list sorted)
+        setBatches((prev) => sortBatches([...prev, savedBatch]));
       }
 
       console.log("Batch saved successfully:", savedBatch);
@@ -1047,7 +1063,7 @@ export default function TimelineGrid() {
               dataProvider.getBatches(),
             ]);
             setEquipment(eq);
-            setBatches(batches);
+            setBatches(sortBatches(batches));
             setOperations(ops);
             // reset history after import
             undoStackRef.current = [];

@@ -80,7 +80,7 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
                 </Button>
               </div>
 
-              <Table arial-label="Batches table">
+              <Table aria-label="Batches table">
                 <TableHeader>
                   <TableRow>
                     <TableHeaderCell>Batch ID</TableHeaderCell>
@@ -93,41 +93,46 @@ export const BatchManagement: React.FC<BatchManagementProps> = ({
                 <TableBody>
                   {batches.map((batch) => (
                     <TableRow key={batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid}>
+                      {/* Batch ID */}
                       <TableCell>
-                          <TableCellLayout>{batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid}</TableCellLayout>
+                        <TableCellLayout>{batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid}</TableCellLayout>
                       </TableCell>
-                              <TableCell>
-                                <TableCellLayout>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "8px",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: "20px",
-                                        height: "20px",
-                                        backgroundColor: getBatchColor(batch),
-                                        border: "1px solid #ccc",
-                                        borderRadius: "4px",
-                                      }}
-                                    />
-                                    {getBatchColor(batch)}
-                                  </div>
-                                </TableCellLayout>
-                              </TableCell>
+                      {/* Color Swatch */}
                       <TableCell>
                         <TableCellLayout>
-                          {new Date(batch.createdon ?? Date.now()).toLocaleDateString()}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                backgroundColor: getBatchColor(batch),
+                                border: "1px solid #ccc",
+                                borderRadius: "4px",
+                              }}
+                              title={getBatchColor(batch)}
+                            />
+                          </div>
                         </TableCellLayout>
                       </TableCell>
+                      {/* Created Date */}
                       <TableCell>
                         <TableCellLayout>
-                          {new Date(batch.modifiedon ?? Date.now()).toLocaleDateString()}
+                          {batch.createdon ? new Date(batch.createdon).toLocaleDateString() : ""}
                         </TableCellLayout>
                       </TableCell>
+                      {/* Modified Date */}
+                      <TableCell>
+                        <TableCellLayout>
+                          {batch.modifiedon ? new Date(batch.modifiedon).toLocaleDateString() : ""}
+                        </TableCellLayout>
+                      </TableCell>
+                      {/* Actions */}
                       <TableCell>
                         <TableCellLayout>
                           <Menu>
