@@ -1205,7 +1205,11 @@ export default function TimelineGrid() {
         justifyContent: 'flex-start',
         paddingTop: 0,
         paddingBottom: 0,
-                border: isSelected ? "2px solid #0078d4" : "none",
+                // Removed border to avoid increasing total box height which caused bottom overflow; rely on boxShadow highlight
+                boxSizing: 'border-box',
+                // Nudge upward to vertically center
+                transform: 'translateY(-6px)',
+                height: 'calc(100% - 6px)',
                 boxShadow: isSelected
                   ? "0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15)"
                   : item.itemProps?.style?.boxShadow ||
@@ -1232,7 +1236,8 @@ export default function TimelineGrid() {
                       paddingRight: 4,
                       display: 'flex',
                       alignItems: 'center',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <div
