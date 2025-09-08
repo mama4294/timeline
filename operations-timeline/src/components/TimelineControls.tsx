@@ -99,6 +99,7 @@ export default function TimelineControls({
     { key: "day", text: "Day View" },
     { key: "week", text: "Week View" },
     { key: "month", text: "Month View" },
+  { key: "quarter", text: "Quarter View" },
     { key: "year", text: "Year View" },
   ];
 
@@ -107,7 +108,8 @@ export default function TimelineControls({
     { key: "edit", text: "Edit Mode" },
   ];
 
-  const zoomOrder: ZoomLevel[] = ["hour", "day", "week", "month", "year"];
+  // Insert quarter between month and year
+  const zoomOrder: ZoomLevel[] = ["hour", "day", "week", "month", "quarter", "year"]; 
   const currentZoomIndex = zoomOrder.findIndex((z) => z === zoom);
   const canZoomIn = currentZoomIndex > 0;
   const canZoomOut = currentZoomIndex < zoomOrder.length - 1;

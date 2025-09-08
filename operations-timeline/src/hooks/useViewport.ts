@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-export type ZoomLevel = "hour" | "day" | "week" | "month" | "year";
+// Added "quarter" zoom option
+export type ZoomLevel = "hour" | "day" | "week" | "month" | "quarter" | "year";
 
 export function useViewport(initialZoom: ZoomLevel = "day") {
   const [zoom, setZoom] = useState<ZoomLevel>(initialZoom);
@@ -39,6 +40,17 @@ export function useViewport(initialZoom: ZoomLevel = "day") {
         s.setDate(now.getDate() - 14);
         e.setDate(now.getDate() + 13);
         break;
+      case "quarter": {
+        // Show the current calendar quarter (exact quarter boundaries)
+        const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3; // 0,3,6,9
+        s.setMonth(quarterStartMonth, 1); // first day of quarter
+        s.setHours(0, 0, 0, 0);
+        // End: last day of the third month in the quarter
+        const quarterEnd = new Date(now.getFullYear(), quarterStartMonth + 3, 0); // day 0 of next quarter month = last day prev
+        quarterEnd.setHours(23, 59, 59, 999);
+        e.setTime(quarterEnd.getTime());
+        break;
+      }
       case "year":
         s.setFullYear(now.getFullYear() - 1);
         e.setFullYear(now.getFullYear() + 1);
@@ -74,6 +86,15 @@ export function useViewport(initialZoom: ZoomLevel = "day") {
         s.setDate(now.getDate() - 14);
         e.setDate(now.getDate() + 13);
         break;
+      case "quarter": {
+        const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
+        s.setMonth(quarterStartMonth, 1);
+        s.setHours(0, 0, 0, 0);
+        const quarterEnd = new Date(now.getFullYear(), quarterStartMonth + 3, 0);
+        quarterEnd.setHours(23, 59, 59, 999);
+        e.setTime(quarterEnd.getTime());
+        break;
+      }
       case "year":
         s.setFullYear(now.getFullYear() - 1);
         e.setFullYear(now.getFullYear() + 1);
