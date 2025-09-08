@@ -608,6 +608,15 @@ export default function TimelineGrid() {
     const handleKey = async (e: KeyboardEvent) => {
       if (e.key !== 'Delete' && e.key !== 'Backspace') return;
       if (!editMode) return;
+      // Don't delete if focused element is an input-like field (editing text)
+      const active = document.activeElement as HTMLElement | null;
+      if (active) {
+        const tag = active.tagName;
+        const isEditable = active.isContentEditable;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || isEditable || active.getAttribute('role') === 'textbox') {
+          return; // allow normal text deletion
+        }
+      }
       const ids = Array.from(selectedItemsRef.current);
       if (ids.length === 0) return;
       pushHistory();
