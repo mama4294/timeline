@@ -79,6 +79,7 @@ export class LocalDb {
       cr2b6_tag TEXT NOT NULL,
       cr2b6_description TEXT,
       cr2b6_taganddescription TEXT,
+  cr2b6_order INTEGER,
       createdon TEXT,
       modifiedon TEXT,
       ownerid TEXT,
@@ -87,6 +88,33 @@ export class LocalDb {
   owneridyominame TEXT,
       statecode TEXT
     )`);
+
+    // Migration: ensure cr2b6_order column exists for older DBs
+    try {
+      // Attempt a harmless select; if it fails, add column
+      this.all(`SELECT cr2b6_order FROM cr2b6_equipments LIMIT 1`);
+    } catch {
+      try {
+        this.run(`ALTER TABLE cr2b6_equipments ADD COLUMN cr2b6_order INTEGER`);
+      } catch { /* ignore */ }
+    }
+    // Initialize missing order values sequentially
+    try {
+      const eqRows = this.list<any>('cr2b6_equipments');
+      let needsInit = false;
+      for (const r of eqRows) {
+        if (r.cr2b6_order === null || r.cr2b6_order === undefined) { needsInit = true; break; }
+      }
+      if (needsInit) {
+        eqRows.sort((a,b)=> String(a.cr2b6_equipmentid).localeCompare(String(b.cr2b6_equipmentid)));
+        eqRows.forEach((r,i) => {
+          if (r.cr2b6_order === null || r.cr2b6_order === undefined) {
+            r.cr2b6_order = i;
+            this.update('cr2b6_equipments','cr2b6_equipmentid', r.cr2b6_equipmentid, r);
+          }
+        });
+      }
+    } catch { /* ignore */ }
 
     // batches
     this.run(`CREATE TABLE IF NOT EXISTS cr2b6_batcheses (

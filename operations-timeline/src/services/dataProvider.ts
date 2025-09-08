@@ -22,11 +22,14 @@ class LocalSqliteDataProvider implements IDataProvider {
 
   async getEquipment(): Promise<cr2b6_equipments[]> {
     const rows = (await this.db()).list<any>("cr2b6_equipments");
-    return rows.map((r) => ({
+    return rows
+      .map((r) => ({
       ...r,
+  cr2b6_order: r.cr2b6_order,
       createdon: r.createdon ? new Date(r.createdon) : undefined,
       modifiedon: r.modifiedon ? new Date(r.modifiedon) : undefined,
-    })) as cr2b6_equipments[];
+    }))
+      .sort((a,b)=> (a as any).cr2b6_order - (b as any).cr2b6_order) as cr2b6_equipments[];
   }
 
   async getBatches(): Promise<cr2b6_batcheses[]> {
@@ -66,11 +69,18 @@ class LocalSqliteDataProvider implements IDataProvider {
     const id = equipment.cr2b6_equipmentid;
     // Upsert
     const existing = (await this.getEquipment()).find((e) => e.cr2b6_equipmentid === id);
+    // Determine order: keep provided, else keep existing, else append at end
+    const all = await this.getEquipment();
+    const maxOrder = all.reduce((m, e: any) => Math.max(m, e.cr2b6_order ?? -1), -1);
+    const existingOrder = (existing as any)?.cr2b6_order;
+    const resolvedOrder = (equipment as any).cr2b6_order ?? existingOrder ?? (maxOrder + 1);
+
     const row = {
       cr2b6_equipmentid: id,
       cr2b6_tag: equipment.cr2b6_tag || "",
       cr2b6_description: equipment.cr2b6_description || "",
       cr2b6_taganddescription: equipment.cr2b6_taganddescription || `${equipment.cr2b6_tag || ''} - ${equipment.cr2b6_description || ''}`,
+      cr2b6_order: resolvedOrder,
       createdon: equipment.createdon || now,
       modifiedon: equipment.modifiedon || now,
       ownerid: equipment.ownerid || "system",

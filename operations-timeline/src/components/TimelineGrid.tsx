@@ -29,6 +29,9 @@ import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
 import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel";
 // types are available in models if needed
 
+// Helper: ensure each equipment has an order field we can sort & mutate
+interface OrderedEquipment extends cr2b6_equipments { __order?: number }
+
 export default function TimelineGrid() {
   const {
     zoom,
@@ -51,7 +54,7 @@ export default function TimelineGrid() {
   const [selectedOperation, setSelectedOperation] = useState<
     Operation | undefined
   >();
-  const [equipment, setEquipment] = useState<cr2b6_equipments[]>([]);
+  const [equipment, setEquipment] = useState<OrderedEquipment[]>([]);
   const [batches, setBatches] = useState<cr2b6_batcheses[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   // History stacks for undo/redo of operations
@@ -99,6 +102,19 @@ export default function TimelineGrid() {
 
   const rebuildItems = (ops: Operation[]) => {
     setItems(ops.map((o) => createTimelineItem(o)));
+  };
+
+  const rebuildGroupsFromEquipment = (eq: OrderedEquipment[]) => {
+    setGroups(
+      eq
+        .slice()
+        .sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0))
+        .map((g: any) => ({
+          id: g.cr2b6_equipmentid,
+          title: g.cr2b6_description,
+          rightTitle: g.cr2b6_tag,
+        }))
+    );
   };
 
   const persistFromTo = async (oldOps: Operation[], newOps: Operation[]) => {
@@ -238,12 +254,16 @@ export default function TimelineGrid() {
       });
       if (!mounted) return;
 
-      setEquipment(eq as cr2b6_equipments[]);
+  // Attach a stable order (persist existing order if present, else index)
+  const withOrder: OrderedEquipment[] = (eq as cr2b6_equipments[]).map((e, i) => ({ ...e, __order: (e as any).cr2b6_order ?? i }));
+  withOrder.sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0));
+  setEquipment(withOrder);
       setBatches(batches);
       setOperations(ops);
 
+      const orderedForGroups = withOrder.slice().sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0));
       setGroups(
-        eq.map((g: any) => ({
+        orderedForGroups.map((g: any) => ({
           id: g.cr2b6_equipmentid,
           title: g.cr2b6_description,
           rightTitle: g.cr2b6_tag,
@@ -632,8 +652,10 @@ export default function TimelineGrid() {
 
   const refreshEquipment = async () => {
     const eq = await dataProvider.getEquipment();
+    const ordered = (eq as any[]).slice().sort((a,b)=> (a.cr2b6_order ?? 0) - (b.cr2b6_order ?? 0));
+    setEquipment(ordered.map((e,i)=> ({...e, __order: e.cr2b6_order ?? i })));
     setGroups(
-      eq.map((g: any) => ({
+      ordered.map((g: any) => ({
         id: g.cr2b6_equipmentid,
         title: g.cr2b6_description,
         rightTitle: g.cr2b6_tag,
@@ -1249,34 +1271,75 @@ export default function TimelineGrid() {
           rightSidebarWidth={0}
           groupRenderer={({ group }) => (
             <div
+              draggable={editMode}
+              onDragStart={(e) => {
+                if (!editMode) return;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', String(group.id));
+              }}
+              onDragOver={(e) => {
+                if (!editMode) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+              }}
+              onDrop={(e) => {
+                if (!editMode) return;
+                e.preventDefault();
+                const draggedId = e.dataTransfer.getData('text/plain');
+                const targetId = String(group.id);
+                if (!draggedId || draggedId === targetId) return;
+                // Reorder equipment array
+                setEquipment(prev => {
+                  const arr = [...prev];
+                  const fromIdx = arr.findIndex(eq => String(eq.cr2b6_equipmentid) === draggedId);
+                  const toIdx = arr.findIndex(eq => String(eq.cr2b6_equipmentid) === targetId);
+                  if (fromIdx === -1 || toIdx === -1) return prev;
+                  const [moved] = arr.splice(fromIdx, 1);
+                  arr.splice(toIdx, 0, moved);
+                  // Reassign order numbers
+                  arr.forEach((e,i)=> { e.__order = i; (e as any).cr2b6_order = i; });
+                  // Rebuild groups to reflect new order
+                  rebuildGroupsFromEquipment(arr);
+                  // Also update groups state directly to ensure immediate reflection
+                  setGroups(arr.slice().sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0)).map(g => ({
+                    id: g.cr2b6_equipmentid,
+                    title: g.cr2b6_description,
+                    rightTitle: g.cr2b6_tag,
+                  })));
+                  // Persist order asynchronously
+                  (async () => {
+                    for (const eq of arr) {
+                      try {
+                        await dataProvider.saveEquipment({
+                          cr2b6_equipmentid: eq.cr2b6_equipmentid,
+                          cr2b6_tag: eq.cr2b6_tag,
+                          cr2b6_description: eq.cr2b6_description,
+                          cr2b6_taganddescription: eq.cr2b6_taganddescription,
+                          // @ts-ignore order field
+                          cr2b6_order: (eq as any).cr2b6_order,
+                        });
+                      } catch (err) {
+                        console.error('Failed to persist equipment order', err);
+                      }
+                    }
+                  })();
+                  return arr;
+                });
+              }}
               style={{
-                cursor: editMode ? "pointer" : "default",
-                padding: "4px 8px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                height: "100%",
+                cursor: editMode ? 'grab' : 'default',
+                padding: '4px 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                height: '100%',
+                opacity: 1,
+                userSelect: 'none'
               }}
               onClick={() => editMode && handleEditEquipment(group.id)}
             >
-              <div
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "0.9em",
-                  lineHeight: "1.2",
-                }}
-              >
-                {group.title}
-              </div>
-              <div
-                style={{
-                  fontSize: "0.75em",
-                  color: "#666",
-                  lineHeight: "1.2",
-                }}
-              >
-                {group.rightTitle}
-              </div>
+              <div style={{ fontWeight: 'bold', fontSize: '0.9em', lineHeight: '1.2' }}>{group.title}</div>
+              <div style={{ fontSize: '0.75em', color: '#666', lineHeight: '1.2' }}>{group.rightTitle}</div>
             </div>
           )}
         >
