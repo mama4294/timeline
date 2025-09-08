@@ -41,7 +41,7 @@ export default function TimelineGrid() {
     setStartDate,
     setEndDate,
     jumpToNow,
-  } = useViewport("day");
+  } = useViewport("month");
   const [groups, setGroups] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
