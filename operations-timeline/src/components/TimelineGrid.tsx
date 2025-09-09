@@ -317,7 +317,7 @@ export default function TimelineGrid() {
             style: (() => {
               const bgColor = o.batchId
                 ? batchColorById[o.batchId] || "#999"
-                : "#ccc";
+                : "#4a4b54ff";
               console.log(
                 "Operation",
                 o.id,
