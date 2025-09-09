@@ -30,20 +30,20 @@ import type { cr2b6_equipments } from "../generated/models/cr2b6_equipmentsModel
 // types are available in models if needed
 
 // Helper: ensure each equipment has an order field we can sort & mutate
-interface OrderedEquipment extends cr2b6_equipments { __order?: number }
+interface OrderedEquipment extends cr2b6_equipments {
+  __order?: number;
+}
 
 // Helper to alphabetically sort batches by batch number (case-insensitive),
 // falling back to the primary key if batch number missing. Stable for equal keys.
 const sortBatches = (list: cr2b6_batcheses[]) => {
-  return list
-    .slice()
-    .sort((a, b) => {
-      const aKey = (a.cr2b6_batchnumber || a.cr2b6_batchesid || "").toLowerCase();
-      const bKey = (b.cr2b6_batchnumber || b.cr2b6_batchesid || "").toLowerCase();
-      if (aKey < bKey) return  -1;
-      if (aKey > bKey) return  1;
-      return 0;
-    });
+  return list.slice().sort((a, b) => {
+    const aKey = (a.cr2b6_batchnumber || a.cr2b6_batchesid || "").toLowerCase();
+    const bKey = (b.cr2b6_batchnumber || b.cr2b6_batchesid || "").toLowerCase();
+    if (aKey < bKey) return -1;
+    if (aKey > bKey) return 1;
+    return 0;
+  });
 };
 
 export default function TimelineGrid() {
@@ -122,7 +122,7 @@ export default function TimelineGrid() {
     setGroups(
       eq
         .slice()
-        .sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0))
+        .sort((a, b) => (a.__order ?? 0) - (b.__order ?? 0))
         .map((g: any) => ({
           id: g.cr2b6_equipmentid,
           title: g.cr2b6_description,
@@ -226,7 +226,11 @@ export default function TimelineGrid() {
   const [groupOffset, setGroupOffset] = useState(0); // starting index in groups array
   const [groupsPerPage, setGroupsPerPage] = useState(30); // dynamic later
   const scrollAccumRef = useRef(0);
-  const dragRef = useRef<{ startY: number; startOffset: number; dragging: boolean }>({ startY: 0, startOffset: 0, dragging: false });
+  const dragRef = useRef<{
+    startY: number;
+    startOffset: number;
+    dragging: boolean;
+  }>({ startY: 0, startOffset: 0, dragging: false });
   const timelineOuterRef = useRef<HTMLDivElement | null>(null);
 
   // Helper function to create timeline items from operations
@@ -268,14 +272,18 @@ export default function TimelineGrid() {
       });
       if (!mounted) return;
 
-  // Attach a stable order (persist existing order if present, else index)
-  const withOrder: OrderedEquipment[] = (eq as cr2b6_equipments[]).map((e, i) => ({ ...e, __order: (e as any).cr2b6_order ?? i }));
-  withOrder.sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0));
-  setEquipment(withOrder);
-  setBatches(sortBatches(batches));
+      // Attach a stable order (persist existing order if present, else index)
+      const withOrder: OrderedEquipment[] = (eq as cr2b6_equipments[]).map(
+        (e, i) => ({ ...e, __order: (e as any).cr2b6_order ?? i })
+      );
+      withOrder.sort((a, b) => (a.__order ?? 0) - (b.__order ?? 0));
+      setEquipment(withOrder);
+      setBatches(sortBatches(batches));
       setOperations(ops);
 
-      const orderedForGroups = withOrder.slice().sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0));
+      const orderedForGroups = withOrder
+        .slice()
+        .sort((a, b) => (a.__order ?? 0) - (b.__order ?? 0));
       setGroups(
         orderedForGroups.map((g: any) => ({
           id: g.cr2b6_equipmentid,
@@ -332,7 +340,9 @@ export default function TimelineGrid() {
       const paddingTop = parseFloat(style.paddingTop) || 0;
       const paddingBottom = parseFloat(style.paddingBottom) || 0;
       const total = el.clientHeight - paddingTop - paddingBottom;
-      const headerEl = el.querySelector('.rct-header-root') as HTMLElement | null;
+      const headerEl = el.querySelector(
+        ".rct-header-root"
+      ) as HTMLElement | null;
       const headerH = headerEl ? headerEl.getBoundingClientRect().height : 48;
       // Available vertical space for rows
       const usable = Math.max(0, total - headerH);
@@ -375,7 +385,9 @@ export default function TimelineGrid() {
     );
     const equipmentMatch =
       eq &&
-      (String(eq.cr2b6_description || "").toLowerCase().includes(s) ||
+      (String(eq.cr2b6_description || "")
+        .toLowerCase()
+        .includes(s) ||
         String(eq.cr2b6_tag || "")
           .toLowerCase()
           .includes(s));
@@ -407,7 +419,9 @@ export default function TimelineGrid() {
 
   // Further constrain displayed items to those in visible group window
   const visibleGroupIds = new Set(displayedGroups.map((g) => String(g.id)));
-  displayedItems = displayedItems.filter((it) => visibleGroupIds.has(String(it.group)));
+  displayedItems = displayedItems.filter((it) =>
+    visibleGroupIds.has(String(it.group))
+  );
 
   // Inject placeholder if no items to display
   if (displayedItems.length === 0) {
@@ -566,8 +580,8 @@ export default function TimelineGrid() {
     });
     setItems(newItems);
 
-  // Update operations state
-  pushHistory();
+    // Update operations state
+    pushHistory();
     setOperations((prev) =>
       prev.map((op) => {
         if (op.id === itemId) {
@@ -620,14 +634,19 @@ export default function TimelineGrid() {
   // Global Delete key handler (avoids per-selection listener & stale state)
   useEffect(() => {
     const handleKey = async (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
       if (!editMode) return;
       // Don't delete if focused element is an input-like field (editing text)
       const active = document.activeElement as HTMLElement | null;
       if (active) {
         const tag = active.tagName;
         const isEditable = active.isContentEditable;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || isEditable || active.getAttribute('role') === 'textbox') {
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          isEditable ||
+          active.getAttribute("role") === "textbox"
+        ) {
           return; // allow normal text deletion
         }
       }
@@ -635,21 +654,21 @@ export default function TimelineGrid() {
       if (ids.length === 0) return;
       pushHistory();
       for (const id of ids) {
-        const op = operations.find(o => o.id === String(id));
+        const op = operations.find((o) => o.id === String(id));
         if (op) {
           try {
             await dataProvider.deleteOperation(op.id);
-            setOperations(prev => prev.filter(p => p.id !== op.id));
-            setItems(prev => prev.filter(i => i.id !== op.id));
+            setOperations((prev) => prev.filter((p) => p.id !== op.id));
+            setItems((prev) => prev.filter((i) => i.id !== op.id));
           } catch (err) {
-            console.error('Failed to delete operation', err);
+            console.error("Failed to delete operation", err);
           }
         }
       }
       setSelectedItems(new Set());
     };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
   }, [editMode, operations]);
 
   const handleEditEquipment = async (groupId: string) => {
@@ -675,8 +694,12 @@ export default function TimelineGrid() {
 
   const refreshEquipment = async () => {
     const eq = await dataProvider.getEquipment();
-    const ordered = (eq as any[]).slice().sort((a,b)=> (a.cr2b6_order ?? 0) - (b.cr2b6_order ?? 0));
-    setEquipment(ordered.map((e,i)=> ({...e, __order: e.cr2b6_order ?? i })));
+    const ordered = (eq as any[])
+      .slice()
+      .sort((a, b) => (a.cr2b6_order ?? 0) - (b.cr2b6_order ?? 0));
+    setEquipment(
+      ordered.map((e, i) => ({ ...e, __order: e.cr2b6_order ?? i }))
+    );
     setGroups(
       ordered.map((g: any) => ({
         id: g.cr2b6_equipmentid,
@@ -690,8 +713,8 @@ export default function TimelineGrid() {
     try {
       await dataProvider.saveEquipment(equipment);
       await refreshEquipment();
-  // Clear any selected equipment so next Add starts fresh
-  setSelectedEquipment(undefined);
+      // Clear any selected equipment so next Add starts fresh
+      setSelectedEquipment(undefined);
     } catch (error) {
       console.error("Failed to save equipment:", error);
       // TODO: Show error message to user
@@ -739,8 +762,8 @@ export default function TimelineGrid() {
 
   const handleSaveOperation = async (operation: Partial<Operation>) => {
     try {
-  // snapshot before change
-  pushHistory();
+      // snapshot before change
+      pushHistory();
       const saved = await dataProvider.saveOperation(operation);
 
       // Update operations state
@@ -773,7 +796,7 @@ export default function TimelineGrid() {
   const handleDeleteOperation = async () => {
     if (selectedOperation) {
       try {
-  pushHistory();
+        pushHistory();
         await dataProvider.deleteOperation(selectedOperation.id);
 
         // Remove from operations state
@@ -949,8 +972,8 @@ export default function TimelineGrid() {
 
   const handleDuplicateOperations = async (batchId: string | null) => {
     try {
-  // snapshot before duplicating
-  pushHistory();
+      // snapshot before duplicating
+      pushHistory();
       const duplicatedOperations: Operation[] = [];
 
       for (const operationId of operationsToDuplicate) {
@@ -990,7 +1013,9 @@ export default function TimelineGrid() {
       console.log(`Duplicated ${duplicatedOperations.length} operations`);
       // After duplication, replace the current selection with the newly created operations
       if (duplicatedOperations.length) {
-        const newIds = new Set<string | number>(duplicatedOperations.map(op => op.id));
+        const newIds = new Set<string | number>(
+          duplicatedOperations.map((op) => op.id)
+        );
         setSelectedItems(newIds);
       }
       // Clear the queued operations to duplicate
@@ -1016,8 +1041,8 @@ export default function TimelineGrid() {
         flexDirection: "column",
         minHeight: "0", // Important for nested flex containers
         overflow: "hidden", // Prevent double scrollbars
-  gap: "8px", // Space between controls and timeline
-  padding: "8px 8px 10px 8px", // Slightly tighter padding
+        gap: "8px", // Space between controls and timeline
+        padding: "8px 8px 10px 8px", // Slightly tighter padding
       }}
     >
       {/* Command Bar Container */}
@@ -1045,10 +1070,10 @@ export default function TimelineGrid() {
             const bytes = db.exportBytes();
             const ab = new ArrayBuffer(bytes.byteLength);
             new Uint8Array(ab).set(bytes);
-            const blob = new Blob([ab], { type: 'application/octet-stream' });
-            const a = document.createElement('a');
+            const blob = new Blob([ab], { type: "application/octet-stream" });
+            const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
-            a.download = 'database.db';
+            a.download = "database.db";
             a.click();
             URL.revokeObjectURL(a.href);
           }}
@@ -1090,7 +1115,7 @@ export default function TimelineGrid() {
       </div>
 
       {/* Timeline Container (reverted wrapper, rely on component scroll) */}
-    <div
+      <div
         style={{
           backgroundColor: "white",
           borderRadius: "6px",
@@ -1098,12 +1123,12 @@ export default function TimelineGrid() {
           padding: "6px 8px 4px 8px",
           flex: 1,
           minHeight: 0,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-          overscrollBehavior: 'contain',
-          touchAction: 'none'
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+          overscrollBehavior: "contain",
+          touchAction: "none",
         }}
         ref={timelineOuterRef}
         onWheel={(e) => {
@@ -1127,8 +1152,12 @@ export default function TimelineGrid() {
           // If the pointer down started on an actual timeline item, don't initiate vertical group drag.
           // This allows immediate horizontal dragging of operations (e.g., right after duplication).
           const target = e.target as HTMLElement;
-          if (target.closest('.rct-item')) return;
-          dragRef.current = { startY: e.clientY, startOffset: clampedOffset, dragging: true };
+          if (target.closest(".rct-item")) return;
+          dragRef.current = {
+            startY: e.clientY,
+            startOffset: clampedOffset,
+            dragging: true,
+          };
           (e.target as HTMLElement).setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
@@ -1147,8 +1176,8 @@ export default function TimelineGrid() {
           (e.target as HTMLElement).releasePointerCapture(e.pointerId);
         }}
       >
-  {/* Removed virtual window status overlay as requested */}
-  <Timeline
+        {/* Removed virtual window status overlay as requested */}
+        <Timeline
           groups={displayedGroups}
           items={displayedItems}
           visibleTimeStart={visibleTimeStart}
@@ -1193,7 +1222,7 @@ export default function TimelineGrid() {
             const isSelected = selectedItems.has(item.id);
             const canResize = selectedItems.size <= 1;
 
-      const itemPropsRaw = getItemProps({
+            const itemPropsRaw = getItemProps({
               onClick: (e: React.MouseEvent) => {
                 handleItemSelect(item.id, e);
               },
@@ -1212,20 +1241,34 @@ export default function TimelineGrid() {
                   operationId: String(item.id),
                 });
               },
+              onMouseDown: (e: React.MouseEvent) => {
+                if (editMode) {
+                  (e.currentTarget as HTMLElement).style.cursor = "grabbing";
+                }
+              },
+              onMouseUp: (e: React.MouseEvent) => {
+                if (editMode) {
+                  (e.currentTarget as HTMLElement).style.cursor = "grab";
+                }
+              },
+              onMouseLeave: (e: React.MouseEvent) => {
+                // Ensure cursor resets if mouse leaves while dragging ended
+                if (editMode) {
+                  (e.currentTarget as HTMLElement).style.cursor = "grab";
+                }
+              },
               style: {
                 ...item.itemProps?.style,
-        cursor: canResize ? "pointer" : "move",
-        userSelect: "none",
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        paddingTop: 0,
-        paddingBottom: 0,
-                // Removed border to avoid increasing total box height which caused bottom overflow; rely on boxShadow highlight
-                boxSizing: 'border-box',
-                // Nudge upward to vertically center
-                transform: 'translateY(-6px)',
-                height: 'calc(100% - 6px)',
+                cursor: editMode ? "grab" : "default",
+                userSelect: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                paddingTop: 0,
+                paddingBottom: 0,
+                boxSizing: "border-box",
+                transform: "translateY(-6px)",
+                height: "calc(100% - 6px)",
                 boxShadow: isSelected
                   ? "0 0 0 1px #0078d4, 0 2px 4px rgba(0, 0, 0, 0.15)"
                   : item.itemProps?.style?.boxShadow ||
@@ -1233,37 +1276,59 @@ export default function TimelineGrid() {
               },
             });
             const { key: itemKey, ...itemProps } = (itemPropsRaw as any) ?? {};
-            const { left: leftResizePropsRaw, right: rightResizePropsRaw } = getResizeProps();
-            const { key: leftKey, ...leftResizeProps } = (leftResizePropsRaw as any) ?? {};
-            const { key: rightKey, ...rightResizeProps } = (rightResizePropsRaw as any) ?? {};
+            const { left: leftResizePropsRaw, right: rightResizePropsRaw } =
+              getResizeProps();
+            const { key: leftKey, ...leftResizeProps } =
+              (leftResizePropsRaw as any) ?? {};
+            const { key: rightKey, ...rightResizeProps } =
+              (rightResizePropsRaw as any) ?? {};
+
+            if (canResize && editMode && leftResizeProps) {
+              (leftResizeProps as any).style = {
+                ...(leftResizeProps as any).style,
+                cursor: "col-resize",
+              };
+            }
+            if (canResize && editMode && rightResizeProps) {
+              (rightResizeProps as any).style = {
+                ...(rightResizeProps as any).style,
+                cursor: "col-resize",
+              };
+            }
 
             return (
-              <div key={String(itemKey ?? item.id)} {...itemProps} data-selected={isSelected}>
+              <div
+                key={String(itemKey ?? item.id)}
+                {...itemProps}
+                data-selected={isSelected}
+              >
                 {canResize && <div key={leftKey} {...leftResizeProps} />}
                 <Tooltip
-                  content={`${item.description}${item.batchId ? ` (Batch: ${item.batchId})` : ""}`}
+                  content={`${item.description}${
+                    item.batchId ? ` (Batch: ${item.batchId})` : ""
+                  }`}
                   relationship="description"
                 >
                   <div
                     style={{
-                      height: '100%',
-                      position: 'relative',
+                      height: "100%",
+                      position: "relative",
                       paddingLeft: 4,
                       paddingRight: 4,
-                      display: 'flex',
-                      alignItems: 'center',
-                      overflow: 'hidden',
-                      boxSizing: 'border-box'
+                      display: "flex",
+                      alignItems: "center",
+                      overflow: "hidden",
+                      boxSizing: "border-box",
                     }}
                   >
                     <div
                       style={{
-                        fontSize: '12px',
-                        color: 'white',
+                        fontSize: "12px",
+                        color: "white",
                         fontWeight: 500,
-                        textOverflow: 'ellipsis',
-                        overflow: 'hidden',
-                        whiteSpace: 'nowrap'
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {item.title}
@@ -1286,38 +1351,50 @@ export default function TimelineGrid() {
               draggable={editMode}
               onDragStart={(e) => {
                 if (!editMode) return;
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', String(group.id));
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(group.id));
               }}
               onDragOver={(e) => {
                 if (!editMode) return;
                 e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
+                e.dataTransfer.dropEffect = "move";
               }}
               onDrop={(e) => {
                 if (!editMode) return;
                 e.preventDefault();
-                const draggedId = e.dataTransfer.getData('text/plain');
+                const draggedId = e.dataTransfer.getData("text/plain");
                 const targetId = String(group.id);
                 if (!draggedId || draggedId === targetId) return;
                 // Reorder equipment array
-                setEquipment(prev => {
+                setEquipment((prev) => {
                   const arr = [...prev];
-                  const fromIdx = arr.findIndex(eq => String(eq.cr2b6_equipmentid) === draggedId);
-                  const toIdx = arr.findIndex(eq => String(eq.cr2b6_equipmentid) === targetId);
+                  const fromIdx = arr.findIndex(
+                    (eq) => String(eq.cr2b6_equipmentid) === draggedId
+                  );
+                  const toIdx = arr.findIndex(
+                    (eq) => String(eq.cr2b6_equipmentid) === targetId
+                  );
                   if (fromIdx === -1 || toIdx === -1) return prev;
                   const [moved] = arr.splice(fromIdx, 1);
                   arr.splice(toIdx, 0, moved);
                   // Reassign order numbers
-                  arr.forEach((e,i)=> { e.__order = i; (e as any).cr2b6_order = i; });
+                  arr.forEach((e, i) => {
+                    e.__order = i;
+                    (e as any).cr2b6_order = i;
+                  });
                   // Rebuild groups to reflect new order
                   rebuildGroupsFromEquipment(arr);
                   // Also update groups state directly to ensure immediate reflection
-                  setGroups(arr.slice().sort((a,b)=> (a.__order ?? 0) - (b.__order ?? 0)).map(g => ({
-                    id: g.cr2b6_equipmentid,
-                    title: g.cr2b6_description,
-                    rightTitle: g.cr2b6_tag,
-                  })));
+                  setGroups(
+                    arr
+                      .slice()
+                      .sort((a, b) => (a.__order ?? 0) - (b.__order ?? 0))
+                      .map((g) => ({
+                        id: g.cr2b6_equipmentid,
+                        title: g.cr2b6_description,
+                        rightTitle: g.cr2b6_tag,
+                      }))
+                  );
                   // Persist order asynchronously
                   (async () => {
                     for (const eq of arr) {
@@ -1331,7 +1408,7 @@ export default function TimelineGrid() {
                           cr2b6_order: (eq as any).cr2b6_order,
                         });
                       } catch (err) {
-                        console.error('Failed to persist equipment order', err);
+                        console.error("Failed to persist equipment order", err);
                       }
                     }
                   })();
@@ -1339,19 +1416,31 @@ export default function TimelineGrid() {
                 });
               }}
               style={{
-                cursor: editMode ? 'grab' : 'default',
-                padding: '4px 8px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                height: '100%',
+                cursor: editMode ? "grab" : "default",
+                padding: "4px 8px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                height: "100%",
                 opacity: 1,
-                userSelect: 'none'
+                userSelect: "none",
               }}
               onClick={() => editMode && handleEditEquipment(group.id)}
             >
-              <div style={{ fontWeight: 'bold', fontSize: '0.9em', lineHeight: '1.2' }}>{group.title}</div>
-              <div style={{ fontSize: '0.75em', color: '#666', lineHeight: '1.2' }}>{group.rightTitle}</div>
+              <div
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "0.9em",
+                  lineHeight: "1.2",
+                }}
+              >
+                {group.title}
+              </div>
+              <div
+                style={{ fontSize: "0.75em", color: "#666", lineHeight: "1.2" }}
+              >
+                {group.rightTitle}
+              </div>
             </div>
           )}
         >
@@ -1359,7 +1448,8 @@ export default function TimelineGrid() {
             <SidebarHeader>
               {({ getRootProps }) => {
                 const rootPropsAll = getRootProps();
-                const { key: rootKey, ...rootProps } = (rootPropsAll as any) ?? {};
+                const { key: rootKey, ...rootProps } =
+                  (rootPropsAll as any) ?? {};
                 return (
                   <div
                     key={rootKey}
@@ -1398,7 +1488,7 @@ export default function TimelineGrid() {
               )}
             </TodayMarker>
           </TimelineMarkers>
-  </Timeline>
+        </Timeline>
       </div>
 
       {/* Context Menu */}
