@@ -23,6 +23,7 @@ import { OperationDialog } from "./OperationDialog";
 import { ContextMenu } from "./ContextMenu";
 import { DuplicateOperationsDialog } from "./DuplicateOperationsDialog";
 import { BatchManagement } from "./BatchManagement";
+import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { LocalDb } from "../services/localDb";
 import type { Operation } from "../models/types";
 import type { cr2b6_batcheses } from "../generated/models/cr2b6_batchesesModel";
@@ -68,6 +69,11 @@ export default function TimelineGrid() {
   const [selectedOperation, setSelectedOperation] = useState<
     Operation | undefined
   >();
+
+  // Delete confirmation dialog state
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
+  const [operationToDelete, setOperationToDelete] = useState<Operation | undefined>();
+  const [operationsToDelete, setOperationsToDelete] = useState<Operation[]>([]);
   const [equipment, setEquipment] = useState<OrderedEquipment[]>([]);
   const [batches, setBatches] = useState<cr2b6_batcheses[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -654,20 +660,16 @@ export default function TimelineGrid() {
       }
       const ids = Array.from(selectedItemsRef.current);
       if (ids.length === 0) return;
-      pushHistory();
-      for (const id of ids) {
-        const op = operations.find((o) => o.id === String(id));
-        if (op) {
-          try {
-            await dataProvider.deleteOperation(op.id);
-            setOperations((prev) => prev.filter((p) => p.id !== op.id));
-            setItems((prev) => prev.filter((i) => i.id !== op.id));
-          } catch (err) {
-            console.error("Failed to delete operation", err);
-          }
-        }
+
+      // Find operations to delete
+      const opsToDelete = ids
+        .map(id => operations.find(o => o.id === String(id)))
+        .filter(op => op !== undefined) as Operation[];
+
+      if (opsToDelete.length > 0) {
+        setOperationsToDelete(opsToDelete);
+        setIsDeleteConfirmationOpen(true);
       }
-      setSelectedItems(new Set());
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -795,24 +797,32 @@ export default function TimelineGrid() {
     }
   };
 
-  const handleDeleteOperation = async () => {
+  const handleDeleteOperation = () => {
     if (selectedOperation) {
+      setOperationToDelete(selectedOperation);
+      setIsDeleteConfirmationOpen(true);
+    }
+  };
+
+  const confirmDeleteOperation = async () => {
+    const operationsToProcess = operationsToDelete.length > 0 ? operationsToDelete : (operationToDelete ? [operationToDelete] : []);
+
+    if (operationsToProcess.length > 0) {
       try {
         pushHistory();
-        await dataProvider.deleteOperation(selectedOperation.id);
 
-        // Remove from operations state
-        setOperations((prev) =>
-          prev.filter((op) => op.id !== selectedOperation.id)
-        );
+        for (const op of operationsToProcess) {
+          await dataProvider.deleteOperation(op.id);
+          setOperations((prev) => prev.filter((p) => p.id !== op.id));
+          setItems((prev) => prev.filter((i) => i.id !== op.id));
+        }
 
-        // Remove from timeline items
-        setItems((prev) =>
-          prev.filter((item) => item.id !== selectedOperation.id)
-        );
-
+        // Clear selections and close dialogs
+        setSelectedItems(new Set());
         setIsOperationDialogOpen(false);
         setSelectedOperation(undefined);
+        setOperationToDelete(undefined);
+        setOperationsToDelete([]);
       } catch (error) {
         console.error("Failed to delete operation:", error);
         // TODO: Show error message to user
@@ -878,7 +888,7 @@ export default function TimelineGrid() {
   const handleContextMenuDelete = () => {
     if (!editMode) return;
     if (contextMenu.operationId) {
-      // Find the operation and set it as selected, then delete
+      // Find the operation
       const operation =
         operations.find((op) => op.id === contextMenu.operationId) ||
         items.find((item) => item.id === contextMenu.operationId);
@@ -886,7 +896,7 @@ export default function TimelineGrid() {
       if (operation) {
         if ("equipmentId" in operation) {
           // It's already an Operation object
-          setSelectedOperation(operation);
+          setOperationToDelete(operation);
         } else {
           // Convert from timeline item
           const operationData: Operation = {
@@ -900,11 +910,11 @@ export default function TimelineGrid() {
             createdOn: new Date(),
             modifiedOn: new Date(),
           };
-          setSelectedOperation(operationData);
+          setOperationToDelete(operationData);
         }
 
-        // Call delete handler
-        handleDeleteOperation();
+        // Open confirmation dialog
+        setIsDeleteConfirmationOpen(true);
       }
 
       setContextMenu((prev) => ({ ...prev, visible: false }));
@@ -1594,6 +1604,21 @@ export default function TimelineGrid() {
         equipment={equipment}
         batches={batches}
         editMode={editMode}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={isDeleteConfirmationOpen}
+        onOpenChange={(open) => {
+          setIsDeleteConfirmationOpen(open);
+          if (!open) {
+            // Clear operations when dialog is closed without confirming
+            setOperationToDelete(undefined);
+            setOperationsToDelete([]);
+          }
+        }}
+        onConfirm={confirmDeleteOperation}
+        operationCount={operationsToDelete.length > 0 ? operationsToDelete.length : 1}
       />
 
       {/* Duplicate Operations Dialog */}

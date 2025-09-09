@@ -93,18 +93,8 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
   const handleDelete = useCallback(() => {
     if (onDelete) {
       onDelete();
-      const syntheticEvent = {
-        preventDefault: () => {},
-        stopPropagation: () => {},
-        target: document.body,
-      } as unknown as MouseEvent<HTMLElement>;
-      onOpenChange(syntheticEvent, {
-        type: "triggerClick",
-        open: false,
-        event: syntheticEvent,
-      });
     }
-  }, [onDelete, onOpenChange]);
+  }, [onDelete]);
 
   const formatDateTimeLocal = (date: Date): string => {
     const year = date.getFullYear();
@@ -120,152 +110,154 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogSurface style={{ width: '600px', maxWidth: '90vw' }}>
-        <DialogTitle>
-          {editMode ? (operation ? "Edit Operation" : "Add Operation") : "View Operation"}
-        </DialogTitle>
-        <DialogBody style={{ display: 'block', paddingBottom: '12px' }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-              alignItems: "start"
-            }}
-          >
-            <Field label="Equipment" required>
-              <Dropdown
-                placeholder="Select equipment"
-                value={
-                  equipment.find((eq) => eq.cr2b6_equipmentid === formData.equipmentId)
-                    ?.cr2b6_description || ""
-                }
-                onOptionSelect={(_, data) =>
-                  handleChange("equipmentId", data.optionValue)
-                }
-                disabled={!editMode}
-              >
-                {equipment.map((eq) => (
-                  <Option
-                    key={eq.cr2b6_equipmentid}
-                    value={eq.cr2b6_equipmentid}
-                    text={`${eq.cr2b6_description} (${eq.cr2b6_tag})`}
-                  >
-                    {eq.cr2b6_description} ({eq.cr2b6_tag})
-                  </Option>
-                ))}
-              </Dropdown>
-            </Field>
-
-            <Field label="Start Time" required>
-              <Input
-                type="datetime-local"
-                value={
-                  formData.startTime
-                    ? formatDateTimeLocal(formData.startTime)
-                    : ""
-                }
-                onChange={(e) =>
-                  handleChange("startTime", parseDateTime(e.target.value))
-                }
-                disabled={!editMode}
-              />
-            </Field>
-
-            <Field label="Batch">
-              <Dropdown
-                placeholder="Select batch (optional)"
-                value={
-                  batches.find((batch) => (batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid) === formData.batchId)?.cr2b6_batchnumber ?? ""
-                }
-                onOptionSelect={(_, data) =>
-                  handleChange(
-                    "batchId",
-                    data.optionValue === "" ? null : data.optionValue
-                  )
-                }
-                disabled={!editMode}
-              >
-                <Option value="" text="No Batch">
-                  No Batch
-                </Option>
-                {batches.map((batch) => {
-                  const bid = batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid ?? "";
-                  return (
-                    <Option key={bid} value={bid} text={String(bid)}>
-                      {String(bid)}
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogSurface style={{ width: '600px', maxWidth: '90vw' }}>
+          <DialogTitle>
+            {editMode ? (operation ? "Edit Operation" : "Add Operation") : "View Operation"}
+          </DialogTitle>
+          <DialogBody style={{ display: 'block', paddingBottom: '12px' }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "16px",
+                alignItems: "start"
+              }}
+            >
+              <Field label="Equipment" required>
+                <Dropdown
+                  placeholder="Select equipment"
+                  value={
+                    equipment.find((eq) => eq.cr2b6_equipmentid === formData.equipmentId)
+                      ?.cr2b6_description || ""
+                  }
+                  onOptionSelect={(_, data) =>
+                    handleChange("equipmentId", data.optionValue)
+                  }
+                  disabled={!editMode}
+                >
+                  {equipment.map((eq) => (
+                    <Option
+                      key={eq.cr2b6_equipmentid}
+                      value={eq.cr2b6_equipmentid}
+                      text={`${eq.cr2b6_description} (${eq.cr2b6_tag})`}
+                    >
+                      {eq.cr2b6_description} ({eq.cr2b6_tag})
                     </Option>
-                  );
-                })}
-              </Dropdown>
-            </Field>
+                  ))}
+                </Dropdown>
+              </Field>
 
-            <Field label="End Time" required>
-              <Input
-                type="datetime-local"
-                value={
-                  formData.endTime ? formatDateTimeLocal(formData.endTime) : ""
-                }
-                onChange={(e) =>
-                  handleChange("endTime", parseDateTime(e.target.value))
-                }
-                disabled={!editMode}
-              />
-            </Field>
+              <Field label="Start Time" required>
+                <Input
+                  type="datetime-local"
+                  value={
+                    formData.startTime
+                      ? formatDateTimeLocal(formData.startTime)
+                      : ""
+                  }
+                  onChange={(e) =>
+                    handleChange("startTime", parseDateTime(e.target.value))
+                  }
+                  disabled={!editMode}
+                />
+              </Field>
 
-            <Field label="Type" required>
-              <Dropdown
-                placeholder="Select operation type"
-                value={formData.type || ""}
-                onOptionSelect={(_, data) =>
-                  handleChange("type", data.optionValue)
-                }
-                disabled={!editMode}
-              >
-                <Option value="Production" text="Production">
-                  Production
-                </Option>
-                <Option value="Maintenance" text="Maintenance">
-                  Maintenance
-                </Option>
-                <Option value="Engineering" text="Engineering">
-                  Engineering
-                </Option>
-                <Option value="Miscellaneous" text="Miscellaneous">
-                  Miscellaneous
-                </Option>
-              </Dropdown>
-            </Field>
+              <Field label="Batch">
+                <Dropdown
+                  placeholder="Select batch (optional)"
+                  value={
+                    batches.find((batch) => (batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid) === formData.batchId)?.cr2b6_batchnumber ?? ""
+                  }
+                  onOptionSelect={(_, data) =>
+                    handleChange(
+                      "batchId",
+                      data.optionValue === "" ? null : data.optionValue
+                    )
+                  }
+                  disabled={!editMode}
+                >
+                  <Option value="" text="No Batch">
+                    No Batch
+                  </Option>
+                  {batches.map((batch) => {
+                    const bid = batch.cr2b6_batchnumber ?? batch.cr2b6_batchesid ?? "";
+                    return (
+                      <Option key={bid} value={bid} text={String(bid)}>
+                        {String(bid)}
+                      </Option>
+                    );
+                  })}
+                </Dropdown>
+              </Field>
 
-            <Field label="Description" required>
-              <Input
-                value={formData.description || ""}
-                onChange={(e) => handleChange("description", e.target.value)}
-                disabled={!editMode}
-              />
-            </Field>
-          </div>
-        </DialogBody>
-        {/* <Divider /> */}
-        <DialogActions style={{ display: 'flex', justifyContent: 'space-between' }}>
-          {editMode && operation && onDelete && (
-            <Button appearance="subtle" onClick={handleDelete}>
-              Delete
-            </Button>
-          )}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <DialogTrigger disableButtonEnhancement>
-              <Button appearance="secondary">Cancel</Button>
-            </DialogTrigger>
-            {editMode && (
-              <Button appearance="primary" onClick={handleSave}>
-                {operation ? "Save" : "Add"}
+              <Field label="End Time" required>
+                <Input
+                  type="datetime-local"
+                  value={
+                    formData.endTime ? formatDateTimeLocal(formData.endTime) : ""
+                  }
+                  onChange={(e) =>
+                    handleChange("endTime", parseDateTime(e.target.value))
+                  }
+                  disabled={!editMode}
+                />
+              </Field>
+
+              <Field label="Type" required>
+                <Dropdown
+                  placeholder="Select operation type"
+                  value={formData.type || ""}
+                  onOptionSelect={(_, data) =>
+                    handleChange("type", data.optionValue)
+                  }
+                  disabled={!editMode}
+                >
+                  <Option value="Production" text="Production">
+                    Production
+                  </Option>
+                  <Option value="Maintenance" text="Maintenance">
+                    Maintenance
+                  </Option>
+                  <Option value="Engineering" text="Engineering">
+                    Engineering
+                  </Option>
+                  <Option value="Miscellaneous" text="Miscellaneous">
+                    Miscellaneous
+                  </Option>
+                </Dropdown>
+              </Field>
+
+              <Field label="Description" required>
+                <Input
+                  value={formData.description || ""}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  disabled={!editMode}
+                />
+              </Field>
+            </div>
+          </DialogBody>
+          {/* <Divider /> */}
+          <DialogActions style={{ display: 'flex', justifyContent: 'space-between' }}>
+            {editMode && operation && onDelete && (
+              <Button appearance="subtle" onClick={handleDelete}>
+                Delete
               </Button>
             )}
-          </div>
-        </DialogActions>
-      </DialogSurface>
-    </Dialog>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <DialogTrigger disableButtonEnhancement>
+                <Button appearance="secondary">Cancel</Button>
+              </DialogTrigger>
+              {editMode && (
+                <Button appearance="primary" onClick={handleSave}>
+                  {operation ? "Save" : "Add"}
+                </Button>
+              )}
+            </div>
+          </DialogActions>
+        </DialogSurface>
+      </Dialog>
+    </>
   );
 };
