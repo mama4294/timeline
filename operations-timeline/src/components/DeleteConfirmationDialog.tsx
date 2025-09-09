@@ -6,7 +6,6 @@ import {
   DialogBody,
   DialogActions,
   Button,
-  Display,
 } from "@fluentui/react-components";
 
 interface DeleteConfirmationDialogProps {

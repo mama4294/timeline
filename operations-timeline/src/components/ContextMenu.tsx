@@ -96,7 +96,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         <MenuPopover>
           <MenuList>
             <MenuItem icon={<Edit24Regular />} onClick={handleEdit}>
-              Edit Operation
+              Edit
             </MenuItem>
             <MenuItem
               icon={<SelectAllOn24Regular />}
@@ -111,11 +111,11 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               Select Batch Below
             </MenuItem>
             <MenuItem icon={<Copy24Regular />} onClick={handleDuplicate}>
-              Duplicate Operations
+              Duplicate
             </MenuItem>
             <MenuDivider />
             <MenuItem icon={<Delete24Regular />} onClick={handleDelete}>
-              Delete Operation
+              Delete
             </MenuItem>
           </MenuList>
         </MenuPopover>
