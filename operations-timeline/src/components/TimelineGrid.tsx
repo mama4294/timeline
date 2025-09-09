@@ -71,6 +71,14 @@ export default function TimelineGrid() {
   const [equipment, setEquipment] = useState<OrderedEquipment[]>([]);
   const [batches, setBatches] = useState<cr2b6_batcheses[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
+  // Live drag preview (shows snapped start time while horizontally dragging an item)
+  const [dragPreview, setDragPreview] = useState<{ visible: boolean; time: number; left: number; top: number }>({
+    visible: false,
+    time: 0,
+    left: 0,
+    top: 0,
+  });
+  const itemDragRef = useRef<{ itemId: string | null; active: boolean; offsetX: number; rowTop: number }>({ itemId: null, active: false, offsetX: 0, rowTop: 0 });
   // History stacks for undo/redo of operations
   const undoStackRef = useRef<Operation[][]>([]);
   const redoStackRef = useRef<Operation[][]>([]);
@@ -368,6 +376,55 @@ export default function TimelineGrid() {
 
   const visibleTimeStart = moment(startDate).valueOf();
   const visibleTimeEnd = moment(endDate).valueOf();
+
+  // Format time for drag preview tooltip
+  const formatDragTime = (t: number) => {
+    const d = new Date(t);
+    // Example: Sep 09 02:15 PM
+    return d
+      .toLocaleString(undefined, {
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .replace(",", "");
+  };
+
+  // RAF loop to track live drag position (more reliable than pointermove with library's internal transforms)
+  const dragRafRef = useRef<number | null>(null);
+  const startDragPreviewLoop = () => {
+    if (!itemDragRef.current.active) return;
+    const container = timelineOuterRef.current;
+    if (!container) return;
+    const canvas = container.querySelector('.rct-items') as HTMLElement | null;
+    if (!canvas) return;
+    const itemEl = canvas.querySelector(`.rct-item[data-op-id='${itemDragRef.current.itemId}']`) as HTMLElement | null;
+    if (itemEl) {
+      const canvasRect = canvas.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const itemRect = itemEl.getBoundingClientRect();
+      const span = visibleTimeEnd - visibleTimeStart;
+      // Item start pixel offset within canvas
+      const offset = itemRect.left - canvasRect.left;
+      const ratio = canvasRect.width > 0 ? offset / canvasRect.width : 0;
+      let time = visibleTimeStart + ratio * span;
+      const snap = 30 * 60 * 1000;
+      time = Math.round(time / snap) * snap;
+      const top = itemRect.top - containerRect.top - 6; // 6px above item
+      const left = itemRect.left - containerRect.left; // align with start edge
+      setDragPreview({ visible: true, time, left, top });
+    }
+    dragRafRef.current = window.requestAnimationFrame(startDragPreviewLoop);
+  };
+  const stopDragPreviewLoop = () => {
+    if (dragRafRef.current != null) {
+      cancelAnimationFrame(dragRafRef.current);
+      dragRafRef.current = null;
+    }
+    setDragPreview(p => ({ ...p, visible: false }));
+  };
 
   // Filter items by search term (batchId, equipment title/tag, or operation type)
   let displayedItems = items.filter((it) => {
@@ -1202,34 +1259,73 @@ export default function TimelineGrid() {
           }
         }}
         onPointerDown={(e) => {
-          if (e.button !== 0) return; // left only for drag
-          // If the pointer down started on an actual timeline item, don't initiate vertical group drag.
-          // This allows immediate horizontal dragging of operations (e.g., right after duplication).
+          if (e.button !== 0) return; // left only
           const target = e.target as HTMLElement;
-          if (target.closest(".rct-item")) return;
-          dragRef.current = {
-            startY: e.clientY,
-            startOffset: clampedOffset,
-            dragging: true,
-          };
-          (e.target as HTMLElement).setPointerCapture(e.pointerId);
+          const itemEl = target.closest('.rct-item');
+          if (itemEl) {
+            // Initialize drag preview tracking
+            const idAttr = itemEl.getAttribute('data-op-id') || itemEl.getAttribute('data-id');
+            // capture initial offset of item left relative to canvas to keep label anchored to item start rather than cursor
+            const container = timelineOuterRef.current;
+            const canvas = container?.querySelector('.rct-items') as HTMLElement | null;
+            let offsetX = 0; let rowTop = 0;
+            if (canvas) {
+              const canvasRect = canvas.getBoundingClientRect();
+              const itemRect = (itemEl as HTMLElement).getBoundingClientRect();
+              offsetX = itemRect.left - canvasRect.left; // initial left position inside canvas
+              rowTop = itemRect.top - (container!.getBoundingClientRect().top) - 6; // baseline for tooltip
+            }
+            itemDragRef.current = { itemId: idAttr || null, active: true, offsetX, rowTop };
+            startDragPreviewLoop();
+            return; // let timeline internal drag proceed
+          }
+          // Vertical group window drag
+            dragRef.current = { startY: e.clientY, startOffset: clampedOffset, dragging: true };
+            (e.target as HTMLElement).setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
-          if (!dragRef.current.dragging) return;
-          const dy = e.clientY - dragRef.current.startY;
-          const groupsDelta = Math.round(-dy / GROUP_LINE_HEIGHT); // inverse to natural scroll
-          setGroupOffset(() => {
-            const base = dragRef.current.startOffset + groupsDelta;
-            const max = Math.max(0, filteredGroups.length - groupsPerPage);
-            return Math.min(Math.max(base, 0), max);
-          });
+          if (dragRef.current.dragging) {
+            const dy = e.clientY - dragRef.current.startY;
+            const groupsDelta = Math.round(-dy / GROUP_LINE_HEIGHT);
+            setGroupOffset(() => {
+              const base = dragRef.current.startOffset + groupsDelta;
+              const max = Math.max(0, filteredGroups.length - groupsPerPage);
+              return Math.min(Math.max(base, 0), max);
+            });
+          }
         }}
         onPointerUp={(e) => {
-          if (!dragRef.current.dragging) return;
-          dragRef.current.dragging = false;
-          (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+          if (dragRef.current.dragging) {
+            dragRef.current.dragging = false;
+            (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+          }
+          if (itemDragRef.current.active) {
+            itemDragRef.current = { itemId: null, active: false, offsetX: 0, rowTop: 0 };
+            stopDragPreviewLoop();
+          }
         }}
       >
+        {dragPreview.visible && (
+          <div
+            style={{
+              position: 'absolute',
+              left: dragPreview.left,
+              top: dragPreview.top,
+              transform: 'translate(-50%, -100%)',
+              background: '#323130',
+              color: 'white',
+              padding: '2px 6px',
+              fontSize: '11px',
+              borderRadius: 4,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+              zIndex: 1000,
+            }}
+          >
+            {formatDragTime(dragPreview.time)}
+          </div>
+        )}
         {/* Removed virtual window status overlay as requested */}
         <Timeline
           groups={displayedGroups}
@@ -1355,6 +1451,7 @@ export default function TimelineGrid() {
                 key={String(itemKey ?? item.id)}
                 {...itemProps}
                 data-selected={isSelected}
+                data-op-id={item.id}
               >
                 {canResize && <div key={leftKey} {...leftResizeProps} />}
                 <Tooltip
