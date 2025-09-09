@@ -122,13 +122,18 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogSurface>
+      <DialogSurface style={{ width: '600px', maxWidth: '90vw' }}>
         <DialogTitle>
           {editMode ? (operation ? "Edit Operation" : "Add Operation") : "View Operation"}
         </DialogTitle>
-        <DialogBody>
+        <DialogBody style={{ display: 'block', paddingBottom: '12px' }}>
           <div
-            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px",
+              alignItems: "start"
+            }}
           >
             <Field label="Equipment" required>
               <Dropdown
@@ -152,6 +157,21 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                   </Option>
                 ))}
               </Dropdown>
+            </Field>
+
+            <Field label="Start Time" required>
+              <Input
+                type="datetime-local"
+                value={
+                  formData.startTime
+                    ? formatDateTimeLocal(formData.startTime)
+                    : ""
+                }
+                onChange={(e) =>
+                  handleChange("startTime", parseDateTime(e.target.value))
+                }
+                disabled={!editMode}
+              />
             </Field>
 
             <Field label="Batch">
@@ -182,21 +202,6 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               </Dropdown>
             </Field>
 
-            <Field label="Start Time" required>
-              <Input
-                type="datetime-local"
-                value={
-                  formData.startTime
-                    ? formatDateTimeLocal(formData.startTime)
-                    : ""
-                }
-                onChange={(e) =>
-                  handleChange("startTime", parseDateTime(e.target.value))
-                }
-                disabled={!editMode}
-              />
-            </Field>
-
             <Field label="End Time" required>
               <Input
                 type="datetime-local"
@@ -225,11 +230,11 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                 <Option value="Maintenance" text="Maintenance">
                   Maintenance
                 </Option>
-                <Option value="Cleaning" text="Cleaning">
-                  Cleaning
+                <Option value="Engineering" text="Engineering">
+                  Engineering
                 </Option>
-                <Option value="Inspection" text="Inspection">
-                  Inspection
+                <Option value="Miscellaneous" text="Miscellaneous">
+                  Miscellaneous
                 </Option>
               </Dropdown>
             </Field>
@@ -243,21 +248,23 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
             </Field>
           </div>
         </DialogBody>
-        <Divider />
-        <DialogActions>
-          <DialogTrigger disableButtonEnhancement>
-            <Button appearance="secondary">Cancel</Button>
-          </DialogTrigger>
+        {/* <Divider /> */}
+        <DialogActions style={{ display: 'flex', justifyContent: 'space-between' }}>
           {editMode && operation && onDelete && (
             <Button appearance="subtle" onClick={handleDelete}>
               Delete
             </Button>
           )}
-          {editMode && (
-            <Button appearance="primary" onClick={handleSave}>
-              {operation ? "Save" : "Add"}
-            </Button>
-          )}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <DialogTrigger disableButtonEnhancement>
+              <Button appearance="secondary">Cancel</Button>
+            </DialogTrigger>
+            {editMode && (
+              <Button appearance="primary" onClick={handleSave}>
+                {operation ? "Save" : "Add"}
+              </Button>
+            )}
+          </div>
         </DialogActions>
       </DialogSurface>
     </Dialog>
