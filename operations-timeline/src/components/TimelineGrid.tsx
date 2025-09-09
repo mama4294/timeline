@@ -246,7 +246,8 @@ export default function TimelineGrid() {
     const batch = batches.find(
       (b) => (b.cr2b6_batchnumber || b.cr2b6_batchesid) === operation.batchId
     );
-    const bgColor = batch ? getBatchColor(batch) : "#ccc";
+    const bgColor = batch ? getBatchColor(batch) : "#d3d3d3"; // darker gray for no batch
+    const textColor = batch ? "#fff" : "#000"; // black text for no batch
 
     return {
       id: operation.id,
@@ -258,7 +259,8 @@ export default function TimelineGrid() {
       itemProps: {
         style: {
           background: bgColor,
-          color: "#fff",
+          color: textColor,
+          border: batch ? "none" : "1px solid #999", // subtle border for no batch
         },
       },
     };
