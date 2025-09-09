@@ -52,8 +52,10 @@ export function useViewport(initialZoom: ZoomLevel = "day") {
         break;
       }
       case "year":
-        s.setFullYear(now.getFullYear() - 1);
-        e.setFullYear(now.getFullYear() + 1);
+        s.setMonth(0, 1); // January 1st of current year
+        s.setHours(0, 0, 0, 0);
+        e.setMonth(11, 31); // December 31st of current year
+        e.setHours(23, 59, 59, 999);
         break;
     }
     // Normalize to start/end of day
@@ -96,8 +98,10 @@ export function useViewport(initialZoom: ZoomLevel = "day") {
         break;
       }
       case "year":
-        s.setFullYear(now.getFullYear() - 1);
-        e.setFullYear(now.getFullYear() + 1);
+        s.setMonth(0, 1); // January 1st of current year
+        s.setHours(0, 0, 0, 0);
+        e.setMonth(11, 31); // December 31st of current year
+        e.setHours(23, 59, 59, 999);
         break;
     }
     s.setHours(0, 0, 0, 0);
