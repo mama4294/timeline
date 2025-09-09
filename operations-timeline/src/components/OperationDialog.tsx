@@ -33,6 +33,7 @@ interface OperationDialogProps {
   onDelete?: () => void;
   equipment: cr2b6_equipments[];
   batches: cr2b6_batcheses[];
+  editMode?: boolean;
 }
 
 export const OperationDialog: React.FC<OperationDialogProps> = ({
@@ -43,6 +44,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
   onDelete,
   equipment,
   batches,
+  editMode = true,
 }) => {
   const [formData, setFormData] = useState<Partial<Operation>>(
     operation ?? {
@@ -122,7 +124,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogSurface>
         <DialogTitle>
-          {operation ? "Edit Operation" : "Add Operation"}
+          {editMode ? (operation ? "Edit Operation" : "Add Operation") : "View Operation"}
         </DialogTitle>
         <DialogBody>
           <div
@@ -138,6 +140,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                 onOptionSelect={(_, data) =>
                   handleChange("equipmentId", data.optionValue)
                 }
+                disabled={!editMode}
               >
                 {equipment.map((eq) => (
                   <Option
@@ -163,6 +166,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                     data.optionValue === "" ? null : data.optionValue
                   )
                 }
+                disabled={!editMode}
               >
                 <Option value="" text="No Batch">
                   No Batch
@@ -189,6 +193,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                 onChange={(e) =>
                   handleChange("startTime", parseDateTime(e.target.value))
                 }
+                disabled={!editMode}
               />
             </Field>
 
@@ -201,6 +206,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                 onChange={(e) =>
                   handleChange("endTime", parseDateTime(e.target.value))
                 }
+                disabled={!editMode}
               />
             </Field>
 
@@ -211,6 +217,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
                 onOptionSelect={(_, data) =>
                   handleChange("type", data.optionValue)
                 }
+                disabled={!editMode}
               >
                 <Option value="Production" text="Production">
                   Production
@@ -231,6 +238,7 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
               <Input
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
+                disabled={!editMode}
               />
             </Field>
           </div>
@@ -240,14 +248,16 @@ export const OperationDialog: React.FC<OperationDialogProps> = ({
           <DialogTrigger disableButtonEnhancement>
             <Button appearance="secondary">Cancel</Button>
           </DialogTrigger>
-          {operation && onDelete && (
+          {editMode && operation && onDelete && (
             <Button appearance="subtle" onClick={handleDelete}>
               Delete
             </Button>
           )}
-          <Button appearance="primary" onClick={handleSave}>
-            {operation ? "Save" : "Add"}
-          </Button>
+          {editMode && (
+            <Button appearance="primary" onClick={handleSave}>
+              {operation ? "Save" : "Add"}
+            </Button>
+          )}
         </DialogActions>
       </DialogSurface>
     </Dialog>

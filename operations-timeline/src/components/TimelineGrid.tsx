@@ -790,7 +790,7 @@ export default function TimelineGrid() {
   };
 
   const handleEditOperation = (operationId: string) => {
-    if (!editMode) return; // Editing operations not allowed in view mode
+    // Allow opening in view mode for read-only
 
     // Find the operation in the operations state first, then items if needed
     let operation = operations.find((op) => op.id === operationId);
@@ -1380,10 +1380,13 @@ export default function TimelineGrid() {
               },
               onDoubleClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
-                if (!editMode) return;
                 handleEditOperation(String(item.id));
               },
               onContextMenu: (e: React.MouseEvent) => {
+                if (!editMode) {
+                  e.preventDefault();
+                  return;
+                }
                 e.preventDefault();
                 e.stopPropagation();
                 setContextMenu({
@@ -1684,6 +1687,7 @@ export default function TimelineGrid() {
         onDelete={selectedOperation ? handleDeleteOperation : undefined}
         equipment={equipment}
         batches={batches}
+        editMode={editMode}
       />
 
       {/* Duplicate Operations Dialog */}
