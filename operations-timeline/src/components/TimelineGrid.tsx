@@ -955,6 +955,60 @@ export default function TimelineGrid() {
     }
   };
 
+  const handleContextMenuSelectBatchBelow = () => {
+    if (!contextMenu.operationId) return;
+    // Locate the reference operation (from operations array or items fallback)
+    const operation =
+      operations.find((op) => op.id === contextMenu.operationId) ||
+      items.find((item) => item.id === contextMenu.operationId);
+    if (!operation) return;
+
+    // Normalized accessors
+    const opBatchId =
+      "batchId" in operation ? operation.batchId : operation.batchId;
+    const opEquipmentId =
+      "equipmentId" in operation ? operation.equipmentId : operation.group;
+    if (!opBatchId) {
+      console.log("Operation has no batch to extend selection below.");
+      setContextMenu((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
+    // Determine ordering of equipment groups; groups array holds list in order displayed (after potential reorder)
+    const equipmentOrder: string[] = groups.map((g) => String(g.id));
+    const startIdx = equipmentOrder.indexOf(String(opEquipmentId));
+    if (startIdx === -1) {
+      setContextMenu((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
+    // Collect all equipment ids below current
+    const equipmentBelow = new Set(equipmentOrder.slice(startIdx)); // include current row
+
+    // Collect operations (source of truth operations state) that match batch and are in rows below
+    const matchingOps = operations.filter(
+      (op) =>
+        op.batchId === opBatchId && equipmentBelow.has(String(op.equipmentId))
+    );
+    // Also account for any items not yet synced in operations state
+    const matchingItems = items.filter(
+      (it) => it.batchId === opBatchId && equipmentBelow.has(String(it.group))
+    );
+
+    const newSelection = new Set<string | number>([
+      ...matchingOps.map((m) => m.id),
+      ...matchingItems.map((m) => m.id),
+    ]);
+
+    // Ensure current clicked operation is included
+    newSelection.add(contextMenu.operationId);
+    setSelectedItems(newSelection);
+    console.log(
+      `Selected batch ${opBatchId} across ${newSelection.size} operations in rows below.`
+    );
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  };
+
   const handleContextMenuDuplicate = () => {
     if (!editMode) return;
     if (contextMenu.operationId) {
@@ -1499,6 +1553,7 @@ export default function TimelineGrid() {
         onEdit={handleContextMenuEdit}
         onDelete={handleContextMenuDelete}
         onSelectBatch={handleContextMenuSelectBatch}
+        onSelectBatchBelow={handleContextMenuSelectBatchBelow}
         onDuplicate={handleContextMenuDuplicate}
         onClose={handleContextMenuClose}
       />

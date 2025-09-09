@@ -4,6 +4,7 @@ import {
   Delete24Regular,
   SelectAllOn24Regular,
   Copy24Regular,
+  ArrowDownload24Regular,
 } from "@fluentui/react-icons";
 import {
   Menu,
@@ -21,6 +22,7 @@ interface ContextMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onSelectBatch: () => void;
+  onSelectBatchBelow: () => void;
   onDuplicate: () => void;
   onClose: () => void;
 }
@@ -32,6 +34,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onEdit,
   onDelete,
   onSelectBatch,
+  onSelectBatchBelow,
   onDuplicate,
   onClose,
 }) => {
@@ -44,6 +47,11 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 
   const handleSelectBatch = () => {
     onSelectBatch();
+    onClose();
+  };
+
+  const handleSelectBatchBelow = () => {
+    onSelectBatchBelow();
     onClose();
   };
 
@@ -95,6 +103,12 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
               onClick={handleSelectBatch}
             >
               Select Batch
+            </MenuItem>
+            <MenuItem
+              icon={<ArrowDownload24Regular />}
+              onClick={handleSelectBatchBelow}
+            >
+              Select Batch Below
             </MenuItem>
             <MenuItem icon={<Copy24Regular />} onClick={handleDuplicate}>
               Duplicate Operations
