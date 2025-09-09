@@ -75,7 +75,6 @@ export const BatchDialog: React.FC<BatchDialogProps> = ({
                   value={batchId}
                   onChange={(_, data) => setBatchId(data.value)}
                   placeholder="Enter batch ID (e.g., B001, Batch-Alpha)"
-                  disabled={!!batch} // Disable editing ID for existing batches
                 />
               </Field>
 
